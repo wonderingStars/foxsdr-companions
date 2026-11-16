@@ -1,0 +1,28 @@
+{
+  "name": "hfdl",
+  "version": "1.7.0",
+  "licence": "GPL-3.0-or-later",
+  "source": "https://github.com/szpajder/dumphfdl",
+  "executable": "hfdl.exe",
+  "description": "HFDL (aircraft HF data link, ARINC 635) decoder: M-PSK demodulation at 1800 baud, slot framing, FEC, MPDU/LPDU/HFNPDU/SPDU and ACARS content, several channels inside one I/Q stream",
+  "input": "iq",
+  "format": ["cs16", "cf32"],
+  "rate": { "min": 10800, "max": null },
+  "options": [
+    { "name": "--channel-offset", "value": "Hz", "repeat": true, "required": true, "help": "assigned HFDL channel frequency minus the I/Q centre, in Hz; the signal is the 3 kHz USB channel whose carrier is 1440 Hz above it" },
+    { "name": "--centre", "value": "Hz", "help": "I/Q centre frequency; only used to report absolute frequencies" },
+    { "name": "--hide-ids", "help": "blank aircraft identifiers (ICAO address, registration, flight id, aircraft data) in the output" },
+    { "name": "--system-table", "value": "file", "help": "ground station table (dumphfdl systable.conf) for station names" },
+    { "name": "--start-time", "value": "unix seconds", "help": "wall-clock time of the first sample; frame timestamps count from it (default 0)" },
+    { "name": "--output-mpdus", "help": "also report MPDU headers" },
+    { "name": "--output-corrupted-pdus", "help": "also report PDUs that failed their CRC" },
+    { "name": "--stats", "help": "print a stats line at the end" },
+    { "name": "--chunk", "value": "samples", "help": "read size (does not change the output)" }
+  ],
+  "events": [
+    { "type": "hfdl", "fields": ["hfdl", "text"], "help": "one decoded LPDU / SPDU; hfdl is dumphfdl's own JSON object" },
+    { "type": "text", "fields": ["text"] },
+    { "type": "status", "fields": ["text"] },
+    { "type": "stats", "fields": ["samples", "pdus"] }
+  ]
+}
