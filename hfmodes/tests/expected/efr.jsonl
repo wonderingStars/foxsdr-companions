@@ -1,0 +1,9 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"EFR","state":"found","centre_hz":1502.2,"shift_hz":347.5,"baud":200.0,"detail":""}
+{"t":1.451,"type":"event","mode":"EFR","text":"EFR telegram ok: message 37, address 12 / 34, 3 data bytes: 414243"}
+{"t":1.451,"type":"status","mode":"EFR","state":"reading","centre_hz":1502.2,"shift_hz":347.5,"baud":200.0,"detail":"200 Bd, DIN 19244 frames"}
+{"t":1.451,"type":"text","mode":"EFR","text":"414243"}
+{"t":2.837,"type":"event","mode":"EFR","text":"EFR telegram ok: message 37, address 12 / 34, 3 data bytes: 414243"}
+{"t":2.837,"type":"text","mode":"EFR","text":"414243"}
+{"t":3.490,"type":"stats","mode":"EFR","good":16,"bad":0}
+{"t":3.490,"type":"stats","samples":167498,"seconds":3.490}

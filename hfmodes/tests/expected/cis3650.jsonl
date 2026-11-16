@@ -1,0 +1,23 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":2.043,"type":"event","mode":"CIS-36-50","text":"50 Bd sync found, tones 1400 and 1600 Hz (analysis bins 13 and 15)"}
+{"t":2.043,"type":"status","mode":"CIS-36-50","state":"found","text":"50 Bd sync found"}
+{"t":8.452,"type":"event","mode":"CIS-36-50","text":"message start, sync 0xa5c3b1e4d21, session key 0x25 0x1c 0x07 0x64 0x0e 0x32 0x31 0x23 0x32 0x46 "}
+{"t":8.452,"type":"status","mode":"CIS-36-50","state":"reading","text":"decoding message"}
+{"t":9.195,"type":"text","mode":"CIS-36-50","text":"0x26 0x43 0x15 0x1c 0x70 "}
+{"t":9.845,"type":"text","mode":"CIS-36-50","text":"0x2c 0x34 0x43 0x1a 0x51 "}
+{"t":10.588,"type":"text","mode":"CIS-36-50","text":"0x68 0x64 0x49 0x1c 0x0d "}
+{"t":11.331,"type":"text","mode":"CIS-36-50","text":"0x34 0x25 0x64 0x07 0x16 "}
+{"t":11.981,"type":"text","mode":"CIS-36-50","text":"0x15 0x45 0x43 0x2c 0x49 "}
+{"t":12.725,"type":"text","mode":"CIS-36-50","text":"0x4c 0x49 0x1c 0x61 0x25 "}
+{"t":13.375,"type":"text","mode":"CIS-36-50","text":"0x58 0x62 0x0e 0x0d 0x58 "}
+{"t":14.118,"type":"text","mode":"CIS-36-50","text":"0x54 0x23 0x45 0x32 0x43 "}
+{"t":14.768,"type":"text","mode":"CIS-36-50","text":"0x19 0x1a 0x0b 0x19 0x16 "}
+{"t":15.511,"type":"text","mode":"CIS-36-50","text":"0x43 0x34 0x58 0x43 0x32 "}
+{"t":16.161,"type":"text","mode":"CIS-36-50","text":"0x23 0x52 0x13 0x70 0x25 "}
+{"t":16.904,"type":"text","mode":"CIS-36-50","text":"0x0e 0x62 0x31 0x1c 0x4a "}
+{"t":17.276,"type":"status","mode":"CIS-36-50","state":"found","text":"50 Bd sync found"}
+{"t":17.369,"type":"event","mode":"CIS-36-50","text":"end of message (63 characters in this message, 0 of them with errors)"}
+{"t":17.369,"type":"status","mode":"CIS-36-50","state":"found","text":"50 Bd sync found"}
+{"t":17.554,"type":"text","mode":"CIS-36-50","text":"<EOM> <EOM> <EOM> "}
+{"t":21.509,"type":"stats","mode":"CIS-36-50","good":60,"bad":0}
+{"t":21.509,"type":"stats","samples":237133,"seconds":21.509}

@@ -1,0 +1,34 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"SPREAD","state":"found","centre_hz":1500.5,"shift_hz":411.1,"baud":102.7,"detail":""}
+{"t":22.997,"type":"event","mode":"SPREAD","text":"SPREAD 11 sync: 102.7 Bd, shift 411 Hz (100 % of the code words consistent)"}
+{"t":22.997,"type":"status","mode":"SPREAD","state":"reading","centre_hz":1500.5,"shift_hz":411.1,"baud":102.7,"detail":"SPREAD 11"}
+{"t":22.997,"type":"text","mode":"SPREAD","text":"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 12345 HF UTILITY TEST M"}
+{"t":23.531,"type":"text","mode":"SPREAD","text":"ESSAGE"}
+{"t":24.107,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":24.704,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":25.280,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":25.856,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":26.453,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":27.029,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":27.605,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":28.203,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":28.779,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":29.376,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":29.952,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":30.528,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":31.125,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":31.701,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":32.299,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":32.875,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":33.451,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":34.048,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":34.624,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":35.200,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":35.797,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":36.373,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":36.971,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":37.547,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":38.123,"type":"text","mode":"SPREAD","text":"YYYYYY"}
+{"t":38.255,"type":"text","mode":"SPREAD","text":"_"}
+{"t":38.255,"type":"stats","mode":"SPREAD","good":278,"bad":1}
+{"t":38.255,"type":"stats","samples":1836226,"seconds":38.255}

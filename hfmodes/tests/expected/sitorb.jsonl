@@ -1,0 +1,25 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":0.363,"type":"status","mode":"SITOR-B","state":"found","centre_hz":1634.8,"shift_hz":140.6,"snr_db":5.2,"detail":"normal polarity"}
+{"t":1.493,"type":"status","mode":"SITOR-B","state":"reading","centre_hz":1505.9,"shift_hz":167.0,"snr_db":29.5,"detail":"normal polarity"}
+{"t":7.467,"type":"text","mode":"SITOR-B","text":"FYWFYWFJWFFJWFJWJJJJ"}
+{"t":8.320,"type":"text","mode":"SITOR-B","text":"CQ C"}
+{"t":8.875,"type":"text","mode":"SITOR-B","text":"Q CQ"}
+{"t":9.429,"type":"text","mode":"SITOR-B","text":" DE "}
+{"t":9.984,"type":"text","mode":"SITOR-B","text":"TEST"}
+{"t":10.560,"type":"text","mode":"SITOR-B","text":" 12"}
+{"t":11.115,"type":"text","mode":"SITOR-B","text":"34 "}
+{"t":11.669,"type":"text","mode":"SITOR-B","text":"NAVT"}
+{"t":12.224,"type":"text","mode":"SITOR-B","text":"EX F"}
+{"t":12.800,"type":"text","mode":"SITOR-B","text":"EC B"}
+{"t":13.355,"type":"text","mode":"SITOR-B","text":"ROAD"}
+{"t":13.909,"type":"text","mode":"SITOR-B","text":"CAST"}
+{"t":14.464,"type":"text","mode":"SITOR-B","text":"JJY"}
+{"t":15.040,"type":"text","mode":"SITOR-B","text":"FJ"}
+{"t":16.149,"type":"text","mode":"SITOR-B","text":"FWFF"}
+{"t":17.003,"type":"text","mode":"SITOR-B","text":"YW"}
+{"t":17.685,"type":"text","mode":"SITOR-B","text":"FFYJ"}
+{"t":18.261,"type":"text","mode":"SITOR-B","text":"FJFW"}
+{"t":18.816,"type":"text","mode":"SITOR-B","text":"JJFY"}
+{"t":18.950,"type":"text","mode":"SITOR-B","text":"J"}
+{"t":18.950,"type":"stats","mode":"SITOR","good":241,"bad":0}
+{"t":18.950,"type":"stats","samples":909578,"seconds":18.950}

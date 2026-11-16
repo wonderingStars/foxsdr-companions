@@ -1,0 +1,27 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"COQUELET-13","state":"found","centre_hz":992.0,"shift_hz":0.0,"baud":0.0,"detail":""}
+{"t":6.016,"type":"status","mode":"COQUELET-13","state":"found","centre_hz":992.0,"shift_hz":0.0,"baud":0.0,"detail":"75 ms tones"}
+{"t":6.485,"type":"event","mode":"COQUELET-13","text":"Coquelet 13 tone pairs found"}
+{"t":6.635,"type":"status","mode":"COQUELET-13","state":"reading","centre_hz":992.0,"shift_hz":0.0,"baud":0.0,"detail":"75 ms tones"}
+{"t":7.147,"type":"text","mode":"COQUELET-13","text":"THE "}
+{"t":7.744,"type":"text","mode":"COQUELET-13","text":"QUIC"}
+{"t":8.341,"type":"text","mode":"COQUELET-13","text":"K BR"}
+{"t":8.939,"type":"text","mode":"COQUELET-13","text":"OWN "}
+{"t":9.536,"type":"text","mode":"COQUELET-13","text":"FOX "}
+{"t":10.133,"type":"text","mode":"COQUELET-13","text":"JUMP"}
+{"t":10.731,"type":"text","mode":"COQUELET-13","text":"S OV"}
+{"t":11.349,"type":"text","mode":"COQUELET-13","text":"ER T"}
+{"t":11.947,"type":"text","mode":"COQUELET-13","text":"HE L"}
+{"t":12.544,"type":"text","mode":"COQUELET-13","text":"AZY "}
+{"t":13.141,"type":"text","mode":"COQUELET-13","text":"DOG "}
+{"t":13.888,"type":"text","mode":"COQUELET-13","text":"1234"}
+{"t":14.485,"type":"text","mode":"COQUELET-13","text":"5 H"}
+{"t":15.083,"type":"text","mode":"COQUELET-13","text":"F UT"}
+{"t":15.680,"type":"text","mode":"COQUELET-13","text":"ILIT"}
+{"t":16.299,"type":"text","mode":"COQUELET-13","text":"Y TE"}
+{"t":16.896,"type":"text","mode":"COQUELET-13","text":"ST M"}
+{"t":17.493,"type":"text","mode":"COQUELET-13","text":"ESSA"}
+{"t":18.091,"type":"text","mode":"COQUELET-13","text":"GE"}
+{"t":24.070,"type":"text","mode":"COQUELET-13","text":"J"}
+{"t":24.070,"type":"stats","mode":"COQUELET-13","good":74,"bad":5}
+{"t":24.070,"type":"stats","samples":1155338,"seconds":24.070}

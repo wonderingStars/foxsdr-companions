@@ -1,0 +1,9 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"G-TOR","state":"found","centre_hz":1503.4,"shift_hz":192.7,"baud":200.0,"detail":""}
+{"t":2.240,"type":"event","mode":"G-TOR","text":"G-TOR 200 Bd data block 0"}
+{"t":2.240,"type":"status","mode":"G-TOR","state":"reading","centre_hz":1503.4,"shift_hz":192.7,"baud":200.0,"detail":"200 Bd"}
+{"t":2.752,"type":"text","mode":"G-TOR","text":"G-TOR test frame at the given speed, with a C"}
+{"t":4.651,"type":"event","mode":"G-TOR","text":"G-TOR 200 Bd data block 1"}
+{"t":5.163,"type":"text","mode":"G-TOR","text":"RC check."}
+{"t":5.470,"type":"stats","mode":"G-TOR","good":56,"bad":0}
+{"t":5.470,"type":"stats","samples":262538,"seconds":5.470}

@@ -1,0 +1,12 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":2.539,"type":"status","mode":"SITOR-A","state":"reading","centre_hz":1500.0,"detail":"normal polarity"}
+{"t":2.539,"type":"event","mode":"SITOR-A","text":"SITOR-A: link found (blocks every 450 ms)"}
+{"t":2.539,"type":"event","mode":"SITOR-A","text":"SITOR-A: call to QCXT"}
+{"t":5.312,"type":"text","mode":"SITOR-A","text":"CQ DE"}
+{"t":6.208,"type":"text","mode":"SITOR-A","text":" TEST "}
+{"t":7.104,"type":"text","mode":"SITOR-A","text":"HEL"}
+{"t":8.000,"type":"text","mode":"SITOR-A","text":"LO WOR"}
+{"t":8.896,"type":"text","mode":"SITOR-A","text":"LD 12"}
+{"t":10.197,"type":"event","mode":"SITOR-A","text":"SITOR-A: end of communication"}
+{"t":10.261,"type":"text","mode":"SITOR-A","text":"34"}
+{"t":11.070,"type":"stats","samples":531340,"seconds":11.070}

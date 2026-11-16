@@ -1,0 +1,36 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":0.939,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"150 Bd, 181 Hz shift: waiting for a start of message","snr_db":66.1,"params":{"speed":"150 Bd","shift":"181 Hz","centre":"1500 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"66.1 dB"}}
+{"t":2.816,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"100 Bd, 182 Hz shift: waiting for a start of message","snr_db":66.3,"params":{"speed":"100 Bd","shift":"182 Hz","centre":"1500 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"66.3 dB"}}
+{"t":3.328,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"100 Bd, 200 Hz shift: waiting for a start of message","snr_db":65.2,"params":{"speed":"100 Bd","shift":"200 Hz","centre":"1500 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"65.2 dB"}}
+{"t":4.352,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"50 Bd, 200 Hz shift: waiting for a start of message","snr_db":65.8,"params":{"speed":"50 Bd","shift":"200 Hz","centre":"1500 Hz","variant":"CIS-36-50 / CIS-50-50","messages":"0","polarity":"-","SNR":"65.8 dB"}}
+{"t":6.656,"type":"event","mode":"CIS-36-50-ONAIR","text":"message start at 50 Bd: start word A5C3B1E4D21, session key 15 52 16 0B 1A 64 52 58 0E 62"}
+{"t":6.656,"type":"status","mode":"CIS-36-50-ONAIR","state":"reading","text":"50 Bd, 200 Hz shift: reading a message","snr_db":65.9,"params":{"speed":"50 Bd","shift":"200 Hz","centre":"1500 Hz","variant":"CIS-36-50 / CIS-50-50","messages":"1","polarity":"1 = higher tone","SNR":"65.9 dB"}}
+{"t":7.168,"type":"text","mode":"CIS-36-50-ONAIR","text":"[start, key 15 52 16 0B 1A 64 52 58 0E 62] 0E 16 49 46 "}
+{"t":7.851,"type":"text","mode":"CIS-36-50-ONAIR","text":"0D 2C 45 32 49 "}
+{"t":8.533,"type":"text","mode":"CIS-36-50-ONAIR","text":"1A 31 23 23 "}
+{"t":9.131,"type":"text","mode":"CIS-36-50-ONAIR","text":"62 0E 49 54 32 "}
+{"t":9.813,"type":"text","mode":"CIS-36-50-ONAIR","text":"23 0E 0B 15 62 "}
+{"t":10.496,"type":"text","mode":"CIS-36-50-ONAIR","text":"68 61 25 62 "}
+{"t":11.093,"type":"text","mode":"CIS-36-50-ONAIR","text":"0D 43 23 58 45 "}
+{"t":11.776,"type":"text","mode":"CIS-36-50-ONAIR","text":"2A 32 46 51 58 "}
+{"t":12.459,"type":"text","mode":"CIS-36-50-ONAIR","text":"68 64 26 58 "}
+{"t":13.056,"type":"text","mode":"CIS-36-50-ONAIR","text":"4A 46 49 43 52 "}
+{"t":13.739,"type":"text","mode":"CIS-36-50-ONAIR","text":"15 15 64 0D 43 "}
+{"t":14.421,"type":"text","mode":"CIS-36-50-ONAIR","text":"19 1A 32 15 "}
+{"t":15.019,"type":"text","mode":"CIS-36-50-ONAIR","text":"43 34 70 32 70 "}
+{"t":15.445,"type":"event","mode":"CIS-36-50-ONAIR","text":"end of message: 60 characters, 0 failed the 3:4 check"}
+{"t":15.445,"type":"text","mode":"CIS-36-50-ONAIR","text":"<EOM>"}
+{"t":15.701,"type":"event","mode":"CIS-36-50-ONAIR","text":"next message (sent without a start sequence)"}
+{"t":16.213,"type":"text","mode":"CIS-36-50-ONAIR","text":"[next] 62 0D 31 61 "}
+{"t":16.811,"type":"text","mode":"CIS-36-50-ONAIR","text":"46 46 15 25 29 "}
+{"t":17.493,"type":"text","mode":"CIS-36-50-ONAIR","text":"34 31 0B 0B "}
+{"t":18.091,"type":"text","mode":"CIS-36-50-ONAIR","text":"61 51 58 1C 19 "}
+{"t":18.773,"type":"text","mode":"CIS-36-50-ONAIR","text":"45 13 2A 68 29 "}
+{"t":19.456,"type":"text","mode":"CIS-36-50-ONAIR","text":"1A 32 0E 31 "}
+{"t":20.053,"type":"text","mode":"CIS-36-50-ONAIR","text":"26 1A 0D "}
+{"t":20.224,"type":"event","mode":"CIS-36-50-ONAIR","text":"end of message: 30 characters, 0 failed the 3:4 check"}
+{"t":20.224,"type":"text","mode":"CIS-36-50-ONAIR","text":"<EOM>"}
+{"t":20.907,"type":"event","mode":"CIS-36-50-ONAIR","text":"next message (sent without a start sequence)"}
+{"t":20.941,"type":"text","mode":"CIS-36-50-ONAIR","text":"[next] 1A "}
+{"t":20.941,"type":"stats","mode":"CIS-36-50-ONAIR","good":91,"bad":0}
+{"t":20.941,"type":"stats","samples":251296,"seconds":20.941}

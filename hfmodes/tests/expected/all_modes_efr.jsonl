@@ -1,0 +1,50 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":0.363,"type":"status","mode":"SITOR-B","state":"found","centre_hz":1587.9,"shift_hz":137.7,"snr_db":7.7,"detail":"normal polarity"}
+{"t":0.875,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"150 Bd, 355 Hz shift: waiting for a start of message","snr_db":41.3,"params":{"speed":"150 Bd","shift":"355 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"41.3 dB"}}
+{"t":0.875,"type":"status","mode":"CIS-14","state":"found","text":"96 Bd, 355 Hz shift: looking for the 14-bit frame","snr_db":41.3,"params":{"speed":"96 Bd","shift":"355 Hz","centre":"1492 Hz","frame period":"-","state bits":"-","SNR":"41.3 dB"}}
+{"t":1.003,"type":"status","mode":"CIS-3000","state":"found","text":"PSK signal 5587 Hz wide: no symbol rate line, BPSK: no CIS-3000 match","snr_db":30.4,"params":{"identified":"no","band":"103 .. 5689 Hz","centre":"3168.8 Hz","symbol rate":"-","modulation":"BPSK","lines y^2 / y^4 / y^8":"25 / 23 dB / 22 dB","rate line":"14 dB","SNR":"30.4 dB"}}
+{"t":1.024,"type":"status","mode":"CIS-36","state":"found","text":"MFSK, 4 tones at 30.7 Hz spacing, about 68 Bd: does not match CIS-36","snr_db":0.0,"params":{"tones seen":"4","spacing":"30.7 Hz","lowest / highest":"1307 / 1694 Hz","span":"387 Hz","symbol rate":"about 67.5 Bd","double gaps":"0 (control tones not sent)","identified":"no"}}
+{"t":1.045,"type":"status","mode":"ARQ-E","state":"found","centre_hz":1493.2,"shift_hz":353.5,"baud":0.0,"detail":""}
+{"t":1.045,"type":"status","mode":"ARQ-N","state":"found","centre_hz":1493.2,"shift_hz":353.5,"baud":0.0,"detail":""}
+{"t":1.045,"type":"status","mode":"AUTOSPEC","state":"found","centre_hz":1493.2,"shift_hz":353.5,"baud":0.0,"detail":""}
+{"t":1.045,"type":"status","mode":"SPREAD","state":"found","centre_hz":1493.2,"shift_hz":353.5,"baud":0.0,"detail":""}
+{"t":1.045,"type":"status","mode":"G-TOR","state":"found","centre_hz":1502.2,"shift_hz":347.5,"baud":200.0,"detail":""}
+{"t":1.045,"type":"status","mode":"EFR","state":"found","centre_hz":1502.2,"shift_hz":347.5,"baud":200.0,"detail":""}
+{"t":1.045,"type":"status","mode":"PICCOLO-MK6","state":"found","centre_hz":1640.0,"shift_hz":0.0,"baud":0.0,"detail":""}
+{"t":1.045,"type":"status","mode":"COQUELET-8","state":"found","centre_hz":1630.3,"shift_hz":0.0,"baud":0.0,"detail":""}
+{"t":1.045,"type":"status","mode":"COQUELET-13","state":"found","centre_hz":1609.0,"shift_hz":0.0,"baud":0.0,"detail":""}
+{"t":1.451,"type":"event","mode":"EFR","text":"EFR telegram ok: message 37, address 12 / 34, 3 data bytes: 414243"}
+{"t":1.451,"type":"status","mode":"EFR","state":"reading","centre_hz":1502.2,"shift_hz":347.5,"baud":200.0,"detail":"200 Bd, DIN 19244 frames"}
+{"t":1.451,"type":"text","mode":"EFR","text":"414243"}
+{"t":1.557,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"150 Bd, 356 Hz shift: waiting for a start of message","snr_db":42.0,"params":{"speed":"150 Bd","shift":"356 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"42.0 dB"}}
+{"t":1.557,"type":"status","mode":"CIS-14","state":"found","text":"96 Bd, 356 Hz shift: looking for the 14-bit frame","snr_db":42.0,"params":{"speed":"96 Bd","shift":"356 Hz","centre":"1492 Hz","frame period":"-","state bits":"-","SNR":"42.0 dB"}}
+{"t":1.707,"type":"event","mode":"CROWD36","text":"sync tones found, correcting by 699 Hz, sync tone difference 343 Hz, sync high tone 24"}
+{"t":1.707,"type":"status","mode":"CROWD36","state":"found","text":"sync tones found","detail":"correction 699 Hz"}
+{"t":1.728,"type":"event","mode":"CROWD36","text":"symbol timing found"}
+{"t":1.728,"type":"status","mode":"CROWD36","state":"reading","text":"symbol timing found","detail":"correction 699 Hz"}
+{"t":1.899,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"100 Bd, 356 Hz shift: waiting for a start of message","snr_db":42.0,"params":{"speed":"100 Bd","shift":"356 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"42.0 dB"}}
+{"t":2.005,"type":"status","mode":"CIS-OFDM-HDR","state":"found","text":"OFDM, 108 carriers at 51.36 Hz, 11.32 Bd: no CIS-45 / 60 / 93 match","snr_db":30.7,"params":{"identified":"no","band":"103 .. 5651 Hz","carriers":"108","spacing":"51.36 Hz","symbol rate":"11.317 Bd","useful / guard":"19.47 / 68.90 ms","carrier modulation":"unknown","phase-step spread":"M2 0.18  M4 0.20  M8 0.19","centre carrier off":"no","pilot 3300 Hz":"present","SNR":"30.7 dB"}}
+{"t":2.005,"type":"status","mode":"CIS-128","state":"found","text":"OFDM, 108 carriers at 51.36 Hz, 11.32 Bd: no CIS-128 match","snr_db":30.7,"params":{"identified":"no","band":"103 .. 5651 Hz","carriers":"108","spacing":"51.36 Hz","symbol rate":"11.317 Bd","useful / guard":"19.47 / 68.90 ms","carrier modulation":"unknown","phase-step spread":"M2 0.18  M4 0.20  M8 0.19","centre carrier off":"no","pilot 3300 Hz":"present","SNR":"30.7 dB"}}
+{"t":2.005,"type":"status","mode":"CIS-3000","state":"found","text":"PSK signal 5549 Hz wide: no symbol rate line, BPSK: no CIS-3000 match","snr_db":30.7,"params":{"identified":"no","band":"103 .. 5651 Hz","centre":"3169.9 Hz","symbol rate":"-","modulation":"BPSK","lines y^2 / y^4 / y^8":"47 / 42 dB / 37 dB","rate line":"12 dB","SNR":"30.7 dB"}}
+{"t":2.027,"type":"status","mode":"CIS-36","state":"found","text":"MFSK, 5 tones at 87.7 Hz spacing, about 34 Bd: does not match CIS-36","snr_db":0.0,"params":{"tones seen":"5","spacing":"87.7 Hz","lowest / highest":"1307 / 1694 Hz","span":"387 Hz","symbol rate":"40 Bd","double gaps":"0 (control tones not sent)","identified":"no"}}
+{"t":2.240,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"100 Bd, 355 Hz shift: waiting for a start of message","snr_db":42.0,"params":{"speed":"100 Bd","shift":"355 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"42.0 dB"}}
+{"t":2.240,"type":"status","mode":"CIS-14","state":"found","text":"96 Bd, 355 Hz shift: looking for the 14-bit frame","snr_db":42.0,"params":{"speed":"96 Bd","shift":"355 Hz","centre":"1492 Hz","frame period":"-","state bits":"-","SNR":"42.0 dB"}}
+{"t":2.325,"type":"text","mode":"CROWD36","text":"MMMMMMMMM"}
+{"t":2.368,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"150 Bd, 355 Hz shift: waiting for a start of message","snr_db":42.0,"params":{"speed":"150 Bd","shift":"355 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"42.0 dB"}}
+{"t":2.581,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"150 Bd, 356 Hz shift: waiting for a start of message","snr_db":42.4,"params":{"speed":"150 Bd","shift":"356 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"42.4 dB"}}
+{"t":2.581,"type":"status","mode":"CIS-14","state":"found","text":"96 Bd, 356 Hz shift: looking for the 14-bit frame","snr_db":42.4,"params":{"speed":"96 Bd","shift":"356 Hz","centre":"1492 Hz","frame period":"-","state bits":"-","SNR":"42.4 dB"}}
+{"t":2.837,"type":"event","mode":"EFR","text":"EFR telegram ok: message 37, address 12 / 34, 3 data bytes: 414243"}
+{"t":2.837,"type":"text","mode":"EFR","text":"414243"}
+{"t":2.880,"type":"text","mode":"CROWD36","text":"MIIIIIIIIIIIIIIIIIIII"}
+{"t":3.008,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"100 Bd, 356 Hz shift: waiting for a start of message","snr_db":42.7,"params":{"speed":"100 Bd","shift":"356 Hz","centre":"1492 Hz","variant":"CIS-50-50 (100 Bd traffic)","messages":"0","polarity":"-","SNR":"42.7 dB"}}
+{"t":3.008,"type":"status","mode":"CIS-OFDM-HDR","state":"found","text":"OFDM, 139 carriers at 39.96 Hz, 19.98 Bd: no CIS-45 / 60 / 93 match","snr_db":31.2,"params":{"identified":"no","band":"103 .. 5628 Hz","carriers":"139","spacing":"39.96 Hz","symbol rate":"19.983 Bd","useful / guard":"25.02 / 25.02 ms","carrier modulation":"unknown","phase-step spread":"M2 0.15  M4 0.14  M8 0.14","centre carrier off":"no","pilot 3300 Hz":"present","SNR":"31.2 dB"}}
+{"t":3.008,"type":"event","mode":"CIS-128","text":"CIS-128: 139 carriers at 39.96 Hz, 19.98 Bd, unknown"}
+{"t":3.008,"type":"status","mode":"CIS-128","state":"found","text":"CIS-128: 139 carriers at 39.96 Hz, 19.98 Bd, unknown","snr_db":31.2,"params":{"identified":"CIS-128","band":"103 .. 5628 Hz","carriers":"139","spacing":"39.96 Hz","symbol rate":"19.983 Bd","useful / guard":"25.02 / 25.02 ms","carrier modulation":"unknown","phase-step spread":"M2 0.15  M4 0.14  M8 0.14","centre carrier off":"no","pilot 3300 Hz":"present","SNR":"31.2 dB"}}
+{"t":3.008,"type":"status","mode":"CIS-3000","state":"found","text":"PSK signal 5525 Hz wide: no symbol rate line, BPSK: no CIS-3000 match","snr_db":31.2,"params":{"identified":"no","band":"103 .. 5628 Hz","centre":"3169.9 Hz","symbol rate":"-","modulation":"BPSK","lines y^2 / y^4 / y^8":"42 / 37 dB / 32 dB","rate line":"10 dB","SNR":"31.2 dB"}}
+{"t":3.029,"type":"status","mode":"CIS-36","state":"found","text":"MFSK, 5 tones at 87.4 Hz spacing, about 32 Bd: does not match CIS-36","snr_db":0.0,"params":{"tones seen":"5","spacing":"87.4 Hz","lowest / highest":"1307 / 1694 Hz","span":"387 Hz","symbol rate":"40 Bd","double gaps":"0 (control tones not sent)","identified":"no"}}
+{"t":3.179,"type":"status","mode":"CIS-36-50-ONAIR","state":"found","text":"50 Bd, 356 Hz shift: waiting for a start of message","snr_db":42.7,"params":{"speed":"50 Bd","shift":"356 Hz","centre":"1492 Hz","variant":"CIS-36-50 / CIS-50-50","messages":"0","polarity":"-","SNR":"42.7 dB"}}
+{"t":3.413,"type":"text","mode":"CROWD36","text":"IIIIIIIIIIMMM"}
+{"t":3.490,"type":"text","mode":"CROWD36","text":"M"}
+{"t":3.490,"type":"stats","mode":"EFR","good":16,"bad":0}
+{"t":3.490,"type":"stats","mode":"CROWD36","good":44,"bad":0}
+{"t":3.490,"type":"stats","samples":167498,"seconds":3.490}

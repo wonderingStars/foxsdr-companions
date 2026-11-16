@@ -1,0 +1,26 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"COQUELET-8","state":"found","centre_hz":866.3,"shift_hz":0.0,"baud":0.0,"detail":""}
+{"t":6.016,"type":"event","mode":"COQUELET-8","text":"Coquelet tone pairs found"}
+{"t":6.016,"type":"status","mode":"COQUELET-8","state":"reading","centre_hz":866.3,"shift_hz":0.0,"baud":0.0,"detail":"75 ms tones"}
+{"t":6.528,"type":"text","mode":"COQUELET-8","text":"X"}
+{"t":7.125,"type":"text","mode":"COQUELET-8","text":"THE "}
+{"t":7.723,"type":"text","mode":"COQUELET-8","text":"QUIC"}
+{"t":8.320,"type":"text","mode":"COQUELET-8","text":"K BR"}
+{"t":8.917,"type":"text","mode":"COQUELET-8","text":"OWN "}
+{"t":9.515,"type":"text","mode":"COQUELET-8","text":"FOX "}
+{"t":10.112,"type":"text","mode":"COQUELET-8","text":"JUMP"}
+{"t":10.731,"type":"text","mode":"COQUELET-8","text":"S OV"}
+{"t":11.328,"type":"text","mode":"COQUELET-8","text":"ER T"}
+{"t":11.925,"type":"text","mode":"COQUELET-8","text":"HE L"}
+{"t":12.523,"type":"text","mode":"COQUELET-8","text":"AZY "}
+{"t":13.120,"type":"text","mode":"COQUELET-8","text":"DOG "}
+{"t":13.867,"type":"text","mode":"COQUELET-8","text":"1234"}
+{"t":14.464,"type":"text","mode":"COQUELET-8","text":"5 H"}
+{"t":15.061,"type":"text","mode":"COQUELET-8","text":"F UT"}
+{"t":15.680,"type":"text","mode":"COQUELET-8","text":"ILIT"}
+{"t":16.277,"type":"text","mode":"COQUELET-8","text":"Y TE"}
+{"t":16.875,"type":"text","mode":"COQUELET-8","text":"ST "}
+{"t":17.472,"type":"text","mode":"COQUELET-8","text":"MESSA"}
+{"t":18.069,"type":"text","mode":"COQUELET-8","text":"GE"}
+{"t":24.070,"type":"stats","mode":"COQUELET-8","good":74,"bad":2}
+{"t":24.070,"type":"stats","samples":1155338,"seconds":24.070}

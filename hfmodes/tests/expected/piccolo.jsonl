@@ -1,0 +1,21 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"PICCOLO-MK6","state":"found","centre_hz":510.0,"shift_hz":0.0,"baud":0.0,"detail":""}
+{"t":4.011,"type":"event","mode":"PICCOLO-MK6","text":"Piccolo tone pairs found"}
+{"t":4.011,"type":"status","mode":"PICCOLO-MK6","state":"reading","centre_hz":510.0,"shift_hz":0.0,"baud":0.0,"detail":"50 ms tones"}
+{"t":4.523,"type":"text","mode":"PICCOLO-MK6","text":"IXT"}
+{"t":5.141,"type":"text","mode":"PICCOLO-MK6","text":"HE QUI"}
+{"t":5.739,"type":"text","mode":"PICCOLO-MK6","text":"CK BRO"}
+{"t":6.336,"type":"text","mode":"PICCOLO-MK6","text":"WN FOX"}
+{"t":6.933,"type":"text","mode":"PICCOLO-MK6","text":" JUMPS"}
+{"t":7.531,"type":"text","mode":"PICCOLO-MK6","text":" OVER "}
+{"t":8.128,"type":"text","mode":"PICCOLO-MK6","text":"THE LA"}
+{"t":8.725,"type":"text","mode":"PICCOLO-MK6","text":"ZY DOG"}
+{"t":9.344,"type":"text","mode":"PICCOLO-MK6","text":" 1234"}
+{"t":9.941,"type":"text","mode":"PICCOLO-MK6","text":"5 HF "}
+{"t":10.539,"type":"text","mode":"PICCOLO-MK6","text":"UTILIT"}
+{"t":11.136,"type":"text","mode":"PICCOLO-MK6","text":"Y TEST"}
+{"t":11.733,"type":"text","mode":"PICCOLO-MK6","text":" MESSA"}
+{"t":12.331,"type":"text","mode":"PICCOLO-MK6","text":"GE"}
+{"t":16.270,"type":"text","mode":"PICCOLO-MK6","text":"\rV"}
+{"t":16.270,"type":"stats","mode":"PICCOLO-MK6","good":77,"bad":0}
+{"t":16.270,"type":"stats","samples":780938,"seconds":16.270}

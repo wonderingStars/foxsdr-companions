@@ -1,0 +1,45 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"AUTOSPEC","state":"found","centre_hz":1499.5,"shift_hz":274.4,"baud":68.5,"detail":""}
+{"t":2.368,"type":"status","mode":"AUTOSPEC","state":"found","centre_hz":1502.5,"shift_hz":268.4,"baud":68.5,"detail":""}
+{"t":34.347,"type":"event","mode":"AUTOSPEC","text":"AUTOSPEC sync: 68.5 Bd, shift 268 Hz (100 % of the code words consistent)"}
+{"t":34.347,"type":"status","mode":"AUTOSPEC","state":"reading","centre_hz":1502.5,"shift_hz":268.4,"baud":68.5,"detail":"Mk 1"}
+{"t":34.347,"type":"text","mode":"AUTOSPEC","text":"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 12345 HF UTILITY TEST MESSAGEYYYY"}
+{"t":35.008,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":35.584,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":36.181,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":36.757,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":37.333,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":37.931,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":38.507,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":39.083,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":39.680,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":40.256,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":40.832,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":41.429,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":42.005,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":42.603,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":43.179,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":43.755,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":44.352,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":44.928,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":45.504,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":46.101,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":46.677,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":47.275,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":47.851,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":48.427,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":49.024,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":49.600,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":50.176,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":50.773,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":51.349,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":51.947,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":52.523,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":53.099,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":53.696,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":54.272,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":54.848,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":55.445,"type":"text","mode":"AUTOSPEC","text":"YYYY"}
+{"t":55.706,"type":"text","mode":"AUTOSPEC","text":"YY"}
+{"t":55.706,"type":"stats","mode":"AUTOSPEC","good":277,"bad":0}
+{"t":55.706,"type":"stats","samples":2673888,"seconds":55.706}

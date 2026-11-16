@@ -1,0 +1,15 @@
+{"helper":"hfmodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"}
+{"t":1.045,"type":"status","mode":"ARQ-E","state":"found","centre_hz":1503.4,"shift_hz":383.8,"baud":96.0,"detail":""}
+{"t":1.707,"type":"status","mode":"ARQ-E","state":"found","centre_hz":1500.4,"shift_hz":401.8,"baud":96.0,"detail":""}
+{"t":16.789,"type":"event","mode":"ARQ-E","text":"ARQ-E word sync: 96.0 Bd, shift 402 Hz, cycle 8"}
+{"t":16.789,"type":"status","mode":"ARQ-E","state":"reading","centre_hz":1500.4,"shift_hz":401.8,"baud":96.0,"detail":"cycle 8"}
+{"t":17.301,"type":"text","mode":"ARQ-E","text":"THE QUICK BROWN FOX JUMPS OVER T"}
+{"t":17.899,"type":"text","mode":"ARQ-E","text":"HE LAZY "}
+{"t":18.475,"type":"text","mode":"ARQ-E","text":"DOG 123"}
+{"t":19.051,"type":"text","mode":"ARQ-E","text":"45 HF U"}
+{"t":19.648,"type":"text","mode":"ARQ-E","text":"TILITY T"}
+{"t":20.224,"type":"text","mode":"ARQ-E","text":"EST MESS"}
+{"t":20.800,"type":"text","mode":"ARQ-E","text":"AGE"}
+{"t":35.378,"type":"text","mode":"ARQ-E","text":"B"}
+{"t":35.378,"type":"stats","mode":"ARQ-E","good":371,"bad":2}
+{"t":35.378,"type":"stats","samples":1698138,"seconds":35.378}
