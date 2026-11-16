@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.raw binary
+*.s16 binary
+*.f32 binary

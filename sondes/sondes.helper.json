@@ -1,0 +1,17 @@
+{
+  "name": "sondes",
+  "version": "1.0.0",
+  "licence": "GPL-3.0-only",
+  "source": "https://github.com/rs1729/RS",
+  "executable": "sondes.exe",
+  "protocol": 1,
+  "input": "audio",
+  "format": ["s16", "f32"],
+  "rate": {"min": 38400, "max": 192000, "recommended": 48000},
+  "decoders": ["lms6", "mk2a", "mrz", "mts01", "cf06", "rs92"],
+  "events": [
+    {"type": "sonde", "fields": ["sonde", "subtype", "serial", "frame", "time", "lat", "lon", "alt", "vel_h", "heading", "vel_v", "sats", "temp", "humidity", "pressure", "batt", "gpstow", "aux", "freq", "tx_frequency", "ref_datetime", "ref_position"]},
+    {"type": "status", "fields": ["text"]},
+    {"type": "stats", "fields": ["samples", "frames"]}
+  ]
+}

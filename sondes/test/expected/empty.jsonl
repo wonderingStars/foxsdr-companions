@@ -1,0 +1,2 @@
+{"helper":"sondes","version":"1.0.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/rs1729/RS","format":"s16","rate":48000,"decoders":["lms6","mk2a","mrz","mts01","cf06"]}
+{"t":0.000,"type":"stats","samples":0,"frames":{"lms6":0,"mk2a":0,"mrz":0,"mts01":0,"cf06":0}}

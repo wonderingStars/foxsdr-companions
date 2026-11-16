@@ -1,0 +1,7 @@
+{"helper":"sondes","version":"1.0.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/rs1729/RS","format":"s16","rate":48000,"decoders":["lms6","mk2a","mrz","mts01","cf06"]}
+{"t":0.679,"type":"sonde","sonde":"CF6","frame":207667,"serial":"CF6-12345678","time":"09:41:07.250Z","lat":35.68000,"lon":139.75000,"alt":1500.00000,"vel_h":5.40833,"heading":123.69007,"vel_v":5.50000,"ref_datetime":"GPS","ref_position":"MSL"}
+{"t":1.075,"type":"sonde","sonde":"CF6","frame":207668,"serial":"CF6-12345678","time":"09:41:08.250Z","lat":35.68080,"lon":139.75110,"alt":1506.00000,"vel_h":5.40833,"heading":123.69007,"vel_v":5.50000,"ref_datetime":"GPS","ref_position":"MSL"}
+{"t":1.472,"type":"sonde","sonde":"CF6","frame":207669,"serial":"CF6-12345678","time":"09:41:09.250Z","lat":35.68160,"lon":139.75220,"alt":1512.00000,"vel_h":5.40833,"heading":123.69007,"vel_v":5.50000,"ref_datetime":"GPS","ref_position":"MSL"}
+{"t":1.869,"type":"sonde","sonde":"CF6","frame":207670,"serial":"CF6-12345678","time":"09:41:10.250Z","lat":35.68240,"lon":139.75330,"alt":1518.00000,"vel_h":5.40833,"heading":123.69007,"vel_v":5.50000,"ref_datetime":"GPS","ref_position":"MSL"}
+{"t":2.265,"type":"sonde","sonde":"CF6","frame":207671,"serial":"CF6-12345678","time":"09:41:11.250Z","lat":35.68320,"lon":139.75439,"alt":1524.00000,"vel_h":5.40833,"heading":123.69007,"vel_v":5.50000,"ref_datetime":"GPS","ref_position":"MSL"}
+{"t":2.583,"type":"stats","samples":124000,"frames":{"lms6":0,"mk2a":0,"mrz":0,"mts01":0,"cf06":5}}
