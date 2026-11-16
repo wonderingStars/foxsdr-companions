@@ -1,0 +1,3 @@
+{"helper":"weakmodes","version":"1.0.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://sourceforge.net/p/wsjt/wsjtx/ci/master/tree/","upstream":"WSJT-X b4f9a43 (2025-02-04); wsjtx-ft2libre 356be92 (2026-02-26)","format":"s16","rate":12000,"modes":["FT2L"],"note":"FT2L is a reverse-engineered format and may not match other FT2 software"}
+{"t":3.755,"type":"text","mode":"FT2L","freq":1499.9,"snr":-14,"dt":0.10,"tstart":0.600,"text":"CQ K1ABC FN42"}
+{"t":7.500,"type":"text","mode":"FT2L","freq":1499.9,"snr":-15,"dt":0.10,"tstart":4.350,"text":"CQ K1ABC FN42"}

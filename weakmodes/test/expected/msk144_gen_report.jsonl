@@ -1,0 +1,2 @@
+{"helper":"weakmodes","version":"1.0.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://sourceforge.net/p/wsjt/wsjtx/ci/master/tree/","upstream":"WSJT-X b4f9a43 (2025-02-04); wsjtx-ft2libre 356be92 (2026-02-26)","format":"s16","rate":12000,"modes":["MSK144"],"note":"FT2L is a reverse-engineered format and may not match other FT2 software"}
+{"t":4.437,"type":"text","mode":"MSK144","freq":1502.2,"snr":6,"dt":4.11,"tstart":4.106,"text":"W9XYZ K1ABC -11","note":"short-ping decoder"}

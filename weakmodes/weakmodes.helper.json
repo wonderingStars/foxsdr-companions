@@ -1,0 +1,18 @@
+{
+  "name": "weakmodes",
+  "version": "1.0.0",
+  "licence": "GPL-3.0-or-later",
+  "source": "https://sourceforge.net/p/wsjt/wsjtx/ci/master/tree/",
+  "upstream": "WSJT-X b4f9a43 (2025-02-04) for MSK144 and JT9; wsjtx-ft2libre 356be92 (2026-02-26) for FT2L",
+  "executable": "weakmodes-helper.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32"],
+  "rate": 12000,
+  "args": ["--mode", "ft2,msk144,jt9", "--fmin", "200", "--fmax", "4000", "--depth", "3", "--offset", "0"],
+  "note": "FT2L is a reverse-engineered format (wsjtx-ft2libre) and may not match other FT2 software. Receive only. Periods are counted from the first sample: start the audio on a period boundary (3.75 s for FT2L, 60 s for JT9) or give --offset.",
+  "events": {
+    "text": ["mode", "freq", "snr", "dt", "tstart", "text", "note"]
+  },
+  "reserved_field": "text"
+}
