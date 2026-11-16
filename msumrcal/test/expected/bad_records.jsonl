@@ -1,0 +1,10 @@
+{"helper":"msumrcal","version":"1.0.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/SatDump/SatDump","format":"msumr-lines","upstream":"SatDump 9fee0793c7d42bea2d401d330422e18c33c126fa"}
+{"t":0,"type":"cal","k":0,"ch":4,"valid":true,"cold_view":300,"hot_view":700,"cold_k":258.00,"hot_k":313.10,"cold_rad":0.06897,"hot_rad":0.97215,"gain":0.002257947,"offset":-0.60841,"filled":false,"outlier":false}
+{"t":0,"type":"cal","k":0,"ch":5,"valid":true,"cold_view":310,"hot_view":710,"cold_k":258.00,"hot_k":313.10,"cold_rad":54.47210,"hot_rad":136.24453,"gain":0.2044311,"offset":-8.90153,"filled":false,"outlier":false}
+{"t":0,"type":"cal","k":0,"ch":6,"valid":true,"cold_view":320,"hot_view":720,"cold_k":258.00,"hot_k":313.10,"cold_rad":65.83927,"hot_rad":151.94221,"gain":0.2152574,"offset":-3.04309,"filled":false,"outlier":false}
+{"t":0,"type":"cal","k":1,"ch":4,"valid":true,"cold_view":301,"hot_view":701,"cold_k":258.00,"hot_k":313.10,"cold_rad":0.06897,"hot_rad":0.97215,"gain":0.002257947,"offset":-0.61067,"filled":false,"outlier":false}
+{"t":0,"type":"cal","k":1,"ch":5,"valid":true,"cold_view":311,"hot_view":711,"cold_k":258.00,"hot_k":313.10,"cold_rad":54.47210,"hot_rad":136.24453,"gain":0.2044311,"offset":-9.10596,"filled":false,"outlier":false}
+{"t":0,"type":"cal","k":1,"ch":6,"valid":true,"cold_view":321,"hot_view":721,"cold_k":258.00,"hot_k":313.10,"cold_rad":65.83927,"hot_rad":151.94221,"gain":0.2152574,"offset":-3.25834,"filled":false,"outlier":false}
+{"t":0,"type":"bt","y":0,"ch":4,"k":0,"unit":"K","bt":[285.59,292.58,null,298.07,327.92]}
+{"t":0,"type":"bt","y":8,"ch":6,"k":1,"unit":"K","bt":[263.04,271.16,278.71]}
+{"t":0,"type":"stats","strips":2,"strips_with_tlm":2,"strips_with_temps":2,"cold_mode_k":258.00,"hot_mode_k":313.10,"pixel_rows":2,"pixels":8,"pixels_invalid":1,"bad_lines":6,"dropped_rows":0}

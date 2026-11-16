@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.16)
+project(msumrcal LANGUAGES CXX)
+# GPL helper: Meteor-M MSU-MR infrared calibration. See README.md, UPSTREAM.md, LICENSE.
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+add_executable(msumrcal src/main.cpp src/msumr_calib.h)
+add_executable(gen_msumr_lines tools/gen_msumr_lines.cpp src/msumr_calib.h)
+if(MSVC)
+  target_compile_options(msumrcal PRIVATE /W4 /utf-8)
+  target_compile_options(gen_msumr_lines PRIVATE /W4 /utf-8)
+  target_compile_definitions(msumrcal PRIVATE _CRT_SECURE_NO_WARNINGS)
+  target_compile_definitions(gen_msumr_lines PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
+
+enable_testing()
+add_subdirectory(test)
