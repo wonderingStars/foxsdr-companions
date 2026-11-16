@@ -1,0 +1,4 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"mt63-2000s","freq":1500.0,"rsid":true}
+{"t":6.144,"type":"text","text":"&xSCQ DE","mode":"mt63-2000s","freq":1500.0,"offset":0.01,"snr":20.0,"sync":157.94,"metric":100}
+{"t":8.192,"type":"text","text":" FOXSDR 73","mode":"mt63-2000s","freq":1500.0,"offset":-25.73,"snr":3.3,"sync":2.15,"metric":2}
+{"t":12.950,"type":"stats","samples":103600,"chars":18,"text_events":2,"rsid_hits":0,"pictures_skipped":0}

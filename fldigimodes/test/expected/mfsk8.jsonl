@@ -1,0 +1,6 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"mfsk8","freq":1500.0,"rsid":true}
+{"t":10.304,"type":"text","text":"\r\rCQ ","mode":"mfsk8","freq":1500.0,"offset":0.03,"snr":59.8,"metric":80}
+{"t":12.736,"type":"text","text":"DE FOX","mode":"mfsk8","freq":1500.0,"offset":0.02,"snr":57.2,"metric":90}
+{"t":14.912,"type":"text","text":"SDR 73","mode":"mfsk8","freq":1500.0,"offset":-0.04,"snr":54.9,"metric":94}
+{"t":17.216,"type":"text","text":"\r\r","mode":"mfsk8","freq":1500.1,"offset":0.05,"snr":52.4,"metric":96}
+{"t":17.744,"type":"stats","samples":141952,"chars":19,"text_events":4,"rsid_hits":0,"pictures_skipped":0}

@@ -1,0 +1,11 @@
+--- a/src/mfsk/interleave.cxx
++++ b/upstream/mfsk/interleave.cxx
+@@ -77,7 +77,7 @@
+ 
+ void interleave::bits(unsigned int *pbits)
+ {
+-	unsigned char syms[size];
++	unsigned char syms[64]; // FOXSDR_HELPER: was a variable-length array (size <= 32)
+ 	int i;
+ 
+ 	for (i = 0; i < size; i++)

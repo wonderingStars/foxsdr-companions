@@ -1,0 +1,7 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"olivia-4-250","freq":1500.0,"rsid":true}
+{"t":7.104,"type":"text","text":"Hk","mode":"olivia-4-250","freq":1500.0,"offset":0.00,"sync":7.01,"metric":20}
+{"t":15.296,"type":"text","text":"CQ ","mode":"olivia-4-250","freq":1500.0,"offset":0.00,"sync":11.31,"metric":42}
+{"t":17.344,"type":"text","text":"DE F","mode":"olivia-4-250","freq":1500.0,"offset":0.00,"sync":11.31,"metric":42}
+{"t":19.392,"type":"text","text":"OXSD","mode":"olivia-4-250","freq":1500.0,"offset":0.00,"sync":11.44,"metric":42}
+{"t":21.440,"type":"text","text":"R 73","mode":"olivia-4-250","freq":1500.0,"offset":0.00,"sync":11.60,"metric":43}
+{"t":25.568,"type":"stats","samples":204544,"chars":17,"text_events":5,"rsid_hits":0,"pictures_skipped":0}

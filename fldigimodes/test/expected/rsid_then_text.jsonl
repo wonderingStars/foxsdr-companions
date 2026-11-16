@@ -1,0 +1,7 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"mfsk16","freq":1500.0,"rsid":true}
+{"t":2.880,"type":"rsid","name":"MFSK16","code":57,"mode":"MFSK16","known":true,"freq":1499.2,"extended":false}
+{"t":7.360,"type":"text","text":"¾eH# tn","mode":"mfsk16","freq":1500.5,"offset":0.49,"snr":56.9,"metric":60}
+{"t":10.176,"type":"text","text":"\r\rCQ DE ","mode":"mfsk16","freq":1500.3,"offset":0.32,"snr":51.0,"metric":91}
+{"t":12.288,"type":"text","text":"FOXSDR 73","mode":"mfsk16","freq":1499.2,"offset":-0.83,"snr":46.5,"metric":96}
+{"t":14.114,"type":"text","text":"\r\r","mode":"mfsk16","freq":1501.7,"offset":1.73,"snr":42.6,"metric":97}
+{"t":14.114,"type":"stats","samples":112911,"chars":26,"text_events":4,"rsid_hits":1,"pictures_skipped":0}

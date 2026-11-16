@@ -1,0 +1,4 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"thor50x2","freq":1500.0,"rsid":true}
+{"t":5.888,"type":"text","text":"l 3k","mode":"thor50x2","freq":1500.0,"offset":0.00,"snr":4.5,"metric":100}
+{"t":8.384,"type":"text","text":"\r\rCQ DE FOXSDR 73\r\r","mode":"thor50x2","freq":1500.0,"offset":0.00,"snr":-9.5,"metric":54}
+{"t":15.460,"type":"stats","samples":123680,"chars":23,"text_events":2,"rsid_hits":0,"pictures_skipped":0}

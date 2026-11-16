@@ -1,0 +1,10 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":11025,"mode":"thor5","freq":1500.0,"rsid":true}
+{"t":10.635,"type":"text","text":"p","mode":"thor5","freq":1500.0,"offset":0.00,"snr":9.4,"metric":100}
+{"t":17.926,"type":"text","text":"\r\r","mode":"thor5","freq":1500.0,"offset":0.00,"snr":13.7,"metric":100}
+{"t":20.341,"type":"text","text":"CQ D","mode":"thor5","freq":1500.0,"offset":0.00,"snr":15.1,"metric":100}
+{"t":22.941,"type":"text","text":"E FO","mode":"thor5","freq":1500.0,"offset":0.00,"snr":16.6,"metric":100}
+{"t":25.542,"type":"text","text":"XSD","mode":"thor5","freq":1500.0,"offset":0.00,"snr":15.2,"metric":100}
+{"t":27.725,"type":"text","text":"R 73","mode":"thor5","freq":1500.0,"offset":0.00,"snr":11.5,"metric":100}
+{"t":30.372,"type":"text","text":"\r=r","mode":"thor5","freq":1500.0,"offset":0.00,"snr":6.9,"metric":100}
+{"t":32.220,"type":"text","text":"µ  h","mode":"thor5","freq":1500.0,"offset":0.00,"snr":3.8,"metric":100}
+{"t":32.220,"type":"stats","samples":355225,"chars":25,"text_events":8,"rsid_hits":0,"pictures_skipped":0}

@@ -1,0 +1,6 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":11025,"mode":"thor22","freq":1500.0,"rsid":true}
+{"t":4.969,"type":"text","text":"p\r","mode":"thor22","freq":1500.0,"offset":0.00,"snr":1.6,"metric":100}
+{"t":7.198,"type":"text","text":"\rCQ DE FOXSDR","mode":"thor22","freq":1500.0,"offset":0.00,"snr":0.2,"metric":100}
+{"t":9.288,"type":"text","text":" 73\r\r ","mode":"thor22","freq":1500.0,"offset":0.00,"snr":-14.3,"metric":25}
+{"t":11.471,"type":"text","text":"D","mode":"thor22","freq":1500.0,"offset":0.00,"snr":-29.7,"metric":0}
+{"t":14.805,"type":"stats","samples":163225,"chars":22,"text_events":4,"rsid_hits":0,"pictures_skipped":0}

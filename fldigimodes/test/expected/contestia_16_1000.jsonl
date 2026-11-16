@@ -1,0 +1,4 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"contestia-16-1000","freq":1500.0,"rsid":true}
+{"t":9.152,"type":"text","text":"CQ DE FOXSDR ","mode":"contestia-16-1000","freq":1500.0,"offset":0.00,"sync":6.70,"metric":18}
+{"t":11.200,"type":"text","text":"73","mode":"contestia-16-1000","freq":1500.0,"offset":0.00,"sync":6.72,"metric":19}
+{"t":12.256,"type":"stats","samples":98048,"chars":15,"text_events":2,"rsid_hits":0,"pictures_skipped":0}

@@ -1,0 +1,23 @@
+{
+  "name": "fldigimodes",
+  "version": "0.1.0",
+  "licence": "GPL-3.0-only",
+  "source": "https://github.com/w1hkj/fldigi",
+  "upstream": "fldigi 4.1.23 61b97f4133c4",
+  "executable": "fldigimodes.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32"],
+  "rate": 8000,
+  "rate_note": "8000 Hz for every mode except mfsk11, mfsk22, thor5, thor11 and thor22, which run at 11025 Hz",
+  "modes": ["olivia-<tones>-<bw>", "contestia-<tones>-<bw>", "mfsk4", "mfsk8", "mfsk11", "mfsk16", "mfsk22", "mfsk31", "mfsk32", "mfsk64", "mfsk128", "mfsk64l", "mfsk128l", "mt63-500s", "mt63-500l", "mt63-1000s", "mt63-1000l", "mt63-2000s", "mt63-2000l", "thormicro", "thor4", "thor5", "thor8", "thor11", "thor16", "thor22", "thor25x4", "thor50x1", "thor50x2", "thor100", "rsid"],
+  "rsid_names": 202,
+  "args": ["--mode <olivia-T-B|contestia-T-B|mfsk16|mt63-1000l|thor16|...>", "--freq <Hz>", "--squelch <0..100|off>", "--reverse", "--rsid on|off"],
+  "events": {
+    "text": ["text", "mode", "freq", "offset", "snr", "sync", "metric"],
+    "rsid": ["name", "code", "mode", "known", "freq", "extended", "eot"],
+    "status": ["text"],
+    "stats": ["samples", "chars", "text_events", "rsid_hits", "pictures_skipped"]
+  },
+  "reserved_field": "text"
+}

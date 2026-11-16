@@ -1,0 +1,205 @@
+--- a/src/mfsk/mfsk.cxx
++++ b/upstream/mfsk/mfsk.cxx
+@@ -71,8 +71,9 @@
+ char mfskmsg[80];
+ //=============================================================================
+ 
+-#include "mfsk-pic.cxx"
++// FOXSDR_HELPER: mfsk-pic.cxx (the picture viewer windows and the picture transmitter) is not taken.
+ 
++#ifdef FOXSDR_TEST_TX
+ void  mfsk::tx_init()
+ {
+ 	txstate = TX_STATE_PREAMBLE;
+@@ -89,6 +90,13 @@
+ 
+ 	videoText();
+ }
++#else
++// FOXSDR_HELPER: the helper has no transmit path; these are the stubs the class needs to be complete.
++void  mfsk::tx_init() {}
++int   mfsk::tx_process() { return -1; }
++void  mfsk::send_color_image(std::string) {}
++void  mfsk::send_Grey_image(std::string) {}
++#endif
+ 
+ void  mfsk::rx_init()
+ {
+@@ -122,8 +130,8 @@
+ 	rx_init();
+ 	set_scope_mode(Digiscope::SCOPE);
+ // picture mode init
+-	setpicture_link(this);
+-	TXspp = txSPP;
++	// FOXSDR_HELPER: setpicture_link(this) is not taken (picture viewer); TXspp is the fldigi default of 8
++	TXspp = SAMPLES_PER_PIXEL;
+ 	RXspp = 8;
+ 
+ 	if (progdefaults.StartAtSweetSpot)
+@@ -149,8 +157,6 @@
+ 	while(--msecs && txstate != TX_STATE_PREAMBLE) MilliSleep(1);
+ // do not destroy picTxWin or picRxWin as there may be pending updates
+ // in the UI request queue
+-	if (picTxWin) picTxWin->hide();
+-	activate_mfsk_image_item(false);
+ 
+ 	if (bpfilt) delete bpfilt;
+ 	if (xmtfilt) delete xmtfilt;
+@@ -341,11 +347,7 @@
+ 	prev1symbol = prev2symbol = 0;
+ 	symbolpair[0] = symbolpair[1] = 0;
+ 
+-// picTxWin and picRxWin are created once to support all instances of mfsk
+-	if (!picTxWin) createTxViewer();
+-	if (!picRxWin)
+-		createRxViewer();
+-	activate_mfsk_image_item(true);
++// FOXSDR_HELPER: the picture viewer windows are not created.
+ 	afcmetric = 0.0;
+ 	datashreg = 1;
+ 
+@@ -435,7 +437,7 @@
+ 
+ 		if (color) {
+ 			pixelnbr = rgb + row + 3*col;
+-			REQ(updateRxPic, byte, pixelnbr);
++			// FOXSDR_HELPER: the pixel goes nowhere (no pictures in pipe protocol version 1)
+ 			if (++col == picW) {
+ 				col = 0;
+ 				if (++rgb == 3) {
+@@ -444,8 +446,8 @@
+ 				}
+ 			}
+ 		} else {
+-			for (int i = 0; i < 3; i++)
+-				REQ(updateRxPic, byte, pixelnbr++);
++			// FOXSDR_HELPER: the three copies of the grey pixel go nowhere; the counter still advances
++			pixelnbr += 3;
+ 		}
+ 		picf = 0.0;
+ 
+@@ -590,8 +592,8 @@
+ 
+ void mfsk::softdecode(cmplx *bins)
+ {
+-	double binmag, sum=0, avg=0, b[symbits];
+-	unsigned char symbols[symbits];
++	double binmag, sum=0, avg=0, b[32]; // FOXSDR_HELPER: was b[symbits] (a variable-length array; symbits <= 5)
++	unsigned char symbols[32]; // FOXSDR_HELPER: was symbols[symbits]
+ 	int i, j, k, CWIsymbol;
+ 
+ 	static int CWIcounter[MAX_SYMBOLS] = {0};
+@@ -856,7 +858,8 @@
+ 			if (--counter == 0) {
+ 				counter = picturesize;
+ 				rxstate = RX_STATE_PICTURE;
+-				REQ( showRxViewer, picW, picH );
++				// FOXSDR_HELPER: a picture is being sent: it is skipped, not shown
++				fm_picture_skipped(picW, picH, color);
+ 			}
+ 		}
+ 		if (rxstate == RX_STATE_PICTURE) {
+@@ -864,8 +867,7 @@
+ 				rxstate = RX_STATE_DATA;
+ 				put_status("");
+ 
+-				std::string autosave_dir = PicsDir;
+-				picRx->save_png(autosave_dir.c_str());
++				// FOXSDR_HELPER: no picture is saved
+ 				rx_init();
+ 			} else
+ 				recvpic(z);
+@@ -903,6 +905,9 @@
+ }
+ 
+ 
++#ifdef FOXSDR_TEST_TX
++// FOXSDR_HELPER: everything from here to the end of the file is the transmitter. It is compiled only into the
++// test tool (fldigimodes-sigtool), which uses it to make test audio. The helper itself has no transmit path.
+ //=====================================================================
+ // transmit processing
+ //=====================================================================
+@@ -1100,13 +1105,7 @@
+ 		case TX_STATE_DATA:
+ 			xmtbyte = get_tx_char();
+ 
+-			if(active_modem->XMLRPC_CPS_TEST) {
+-				if(startpic) startpic = false;
+-				if(xmtbyte == 0x05) {
+-					sendchar(0x04); // 0x4 has the same symbol count as 0x5
+-					break;
+-				}
+-			}
++			// FOXSDR_HELPER: the XML-RPC characters-per-second test is not taken
+ 
+ 
+ 			if (xmtbyte == 0x05 || startpic == true) {
+@@ -1143,63 +1142,18 @@
+ 			break;
+ 
+ 		case TX_STATE_PICTURE:
+-			int i = 0;
+-			int blocklen = 128;
+-			stop_deadman();
+-			while (i < xmtbytes) {
+-				if (stopflag || abortxmt)
+-					break;
+-				if (i + blocklen < xmtbytes)
+-					sendpic( &xmtpicbuff[i], blocklen);
+-				else
+-					sendpic( &xmtpicbuff[i], xmtbytes - i);
+-				if ( (100 * i / xmtbytes) % 2 == 0) {
+-					snprintf(mfskmsg, sizeof(mfskmsg),
+-							 "Tx pic: %3.1f%%",
+-							 (100.0f * i) / xmtbytes);
+-					put_status(mfskmsg);
+-				}
+-				i += blocklen;
+-			}
+-			flushtx(preamble);
+-			start_deadman();
+-
+-			REQ_FLUSH(GET_THREAD_ID());
+-
++			// FOXSDR_HELPER: pictures are not transmitted by the test tool
+ 			txstate = TX_STATE_DATA;
+-			put_status("Tx pic: done");
+-			btnpicTxSendAbort->hide();
+-			btnpicTxSPP->show();
+-			btnpicTxSendColor->show();
+-			btnpicTxSendGrey->show();
+-			btnpicTxLoad->show();
+-			btnpicTxClose->show();
+-			if (close_after_transmit) picTxWin->hide();
+-			close_after_transmit = false;
+-			abortxmt = false;
+-			rxstate = RX_STATE_DATA;
+-			memset(picheader, ' ', PICHEADER - 1);
+-			picheader[PICHEADER -1] = 0;
+ 			break;
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-void mfsk::send_color_image(std::string s)
+-{
+-	if (load_image(s.c_str())) {
+-		close_after_transmit = true;
+-		pic_TxSendColor();
+-	}
+-}
++void mfsk::send_color_image(std::string) {}
++
++void mfsk::send_Grey_image(std::string) {}
+ 
+-void mfsk::send_Grey_image(std::string s)
+-{
+-	if (load_image(s.c_str())) {
+-		close_after_transmit = true;
+-		pic_TxSendGrey();
+-	}
+-}
+ 
+ 
++#endif // FOXSDR_TEST_TX

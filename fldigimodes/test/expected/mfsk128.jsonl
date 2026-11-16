@@ -1,0 +1,3 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"mfsk128","freq":1500.0,"rsid":true}
+{"t":3.792,"type":"text","text":"\r\rCQ DE FOXSDR 73\r\r","mode":"mfsk128","freq":1501.6,"offset":1.63,"snr":1.2,"metric":1}
+{"t":3.792,"type":"stats","samples":30336,"chars":19,"text_events":1,"rsid_hits":0,"pictures_skipped":0}

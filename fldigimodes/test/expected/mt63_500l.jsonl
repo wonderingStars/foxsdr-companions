@@ -1,0 +1,5 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"mt63-500l","freq":1500.0,"rsid":true}
+{"t":21.760,"type":"text","text":"l{{`","mode":"mt63-500l","freq":1500.0,"offset":-0.00,"snr":20.0,"sync":125.31,"metric":100}
+{"t":35.520,"type":"text","text":"CQ DE FOXSD","mode":"mt63-500l","freq":1500.0,"offset":-0.00,"snr":20.0,"sync":2954.25,"metric":100}
+{"t":37.600,"type":"text","text":"R 73","mode":"mt63-500l","freq":1500.0,"offset":-0.00,"snr":20.0,"sync":447.08,"metric":100}
+{"t":37.600,"type":"stats","samples":300800,"chars":19,"text_events":3,"rsid_hits":0,"pictures_skipped":0}

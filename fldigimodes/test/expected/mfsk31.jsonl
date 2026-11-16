@@ -1,0 +1,4 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"mfsk31","freq":1500.0,"rsid":true}
+{"t":5.568,"type":"text","text":"\r\rCQ DE FOXS","mode":"mfsk31","freq":1499.6,"offset":-0.36,"snr":90.4,"metric":91}
+{"t":7.680,"type":"text","text":"DR 73\r\r","mode":"mfsk31","freq":1500.2,"offset":0.19,"snr":81.4,"metric":97}
+{"t":8.528,"type":"stats","samples":68224,"chars":19,"text_events":2,"rsid_hits":0,"pictures_skipped":0}

@@ -1,0 +1,309 @@
+--- a/src/thor/thor.cxx
++++ b/upstream/thor/thor.cxx
+@@ -29,6 +29,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <string>
++#include <vector>
+ #include <sstream>
+ #include <iomanip>
+ #include <cmath>
+@@ -58,8 +59,12 @@
+ char thormsg[80];
+ char confidence[80];
+ 
+-#include "thor-pic.cxx"
++// FOXSDR_HELPER: thor-pic.cxx (the picture viewer windows) is not taken; these are the three statics it defined.
++std::string thor::imageheader;
++std::string thor::avatarheader;
++int thor::IMAGEspp = THOR_IMAGESPP;
+ 
++#ifdef FOXSDR_TEST_TX
+ void thor::tx_init()
+ {
+ 	txstate = TX_STATE_PREAMBLE;
+@@ -74,6 +79,15 @@
+ 	cptr = 0;
+ }
+ 
++#else
++// FOXSDR_HELPER: the helper has no transmit path; these are the stubs the class needs to be complete.
++void thor::tx_init() {}
++int thor::tx_process() { return -1; }
++#endif
++void thor::thor_send_image(std::string, bool) {}
++void thor::thor_send_avatar() {}
++void thor::m_thor_send_avatar() {}
++
+ void thor::rx_init()
+ {
+ 	synccounter = 0;
+@@ -200,8 +214,6 @@
+ 	delete picfilter;
+ 	delete pixfilter;
+ 	delete pixsyncfilter;
+-
+-	activate_thor_image_item(false);
+ }
+ 
+ thor::thor(trx_mode md) : hilbert(0), fft(0), filter_reset(false)
+@@ -364,8 +376,6 @@
+ 	pixsyncfilter = new Cmovavg(IMAGEspp * 2);//3*IMAGEspp);
+ 
+ 	init();
+-
+-	activate_thor_image_item(true);
+ }
+ 
+ //=====================================================================
+@@ -426,7 +436,7 @@
+ 	if (b_ava)
+ 		REQ( thor_clear_avatar );
+ 	else
+-		REQ( thor_showRxViewer, pic_str[4]);
++		fm_picture_skipped(picW, picH, image_mode == 0); // FOXSDR_HELPER: the picture is skipped, not shown
+ 
+ 	image_counter = -symlen / 2;
+ 	col = row = rgb = 0;
+@@ -1093,6 +1103,9 @@
+ 	return 0;
+ }
+ 
++#ifdef FOXSDR_TEST_TX
++// FOXSDR_HELPER: everything from here to the end of the file is the transmitter. It is compiled only into the
++// test tool (fldigimodes-sigtool), which uses it to make test audio. The helper itself has no transmit path.
+ //=============================================================================
+ // Transmit methods
+ //=============================================================================
+@@ -1194,7 +1207,6 @@
+   bitstate = 0;
+ }
+ 
+-static bool hide_after_sending = false;
+ 
+ int thor::tx_process()
+ {
+@@ -1253,217 +1265,16 @@
+ 		txstate = TX_STATE_RECEIVE;
+ 		return -1;
+ 	case TX_STATE_IMAGE:
+-		for (size_t n = 0; n < imageheader.length(); n++)
+-			sendchar(imageheader[n], 0);
+-		flushtx();
+-		send_image();
+-		if (hide_after_sending) thorpicTxWin->hide();
+-		hide_after_sending = false;
+-		txstate = TX_STATE_DATA;
+-		break;
+ 	case TX_STATE_AVATAR:
+-		for (size_t n = 0; n < avatarheader.length(); n++)
+-			sendchar(avatarheader[n], 0);
+-		flushtx();
+-		send_avatar();
++		// FOXSDR_HELPER: picture and avatar transmission is not taken (see UPSTREAM.md)
+ 		txstate = TX_STATE_DATA;
++		imageheader.clear();
++		avatarheader.clear();
+ 		break;
+ 	}
+ 	return 0;
+ }
++// FOXSDR_HELPER: the picture and avatar transmitters (send_image, send_avatar and their wrappers, which use the
++// picture viewer windows) are not taken.
+ 
+-// image support
+-
+-#define PHASE_CORR  20
+-
+-static bool send_gray = false;
+-
+-void thor::send_image()
+-{
+-	int W = 640, H = 480;  // grey scale transfer (FAX)
+-	float freq, phaseincr;
+-	float radians = 2.0 * M_PI / samplerate;
+-
+-	imageheader.clear();
+-
+-	if (!thorpicTxWin || !thorpicTxWin->visible()) {
+-		return;
+-	}
+-
+-	switch (selthorpicSize->value()) {
+-		case 0 : W = 59; H = 74; break;
+-		case 1 : W = 120; H = 150; break;
+-		case 2 : W = 240; H = 300; break;
+-		case 3 : W = 160; H = 120; break;
+-		case 4 : W = 320; H = 240; break;
+-		case 5 : W = 640; H = 480; break;
+-	}
+-
+-	REQ(thor_clear_tximage);
+-
+-	stop_deadman();
+-
+-	double black[symlen];
+-
+-	memset(black, 0, sizeof(*black) * symlen);
+-	for (int i = 0; i < PHASE_CORR; i++) ModulateXmtr(black, symlen);
+-
+-	freq = frequency - 0.6 * bandwidth;
+-	phaseincr = radians * freq;
+-	for (int i = 0; i < PHASE_CORR; i++) {
+-		for (int n = 0; n < symlen; n++) {
+-			black[n] = cos(txphase);
+-			txphase -= phaseincr;
+-			if (txphase < 0) txphase += TWOPI;
+-		}
+-		ModulateXmtr(black, symlen);
+-	}
+-
+-	if (send_gray) {  // grey scale image
+-		for (int row = 0; row < H; row++) {
+-			memset(outbuf, 0, IMAGEspp * sizeof(*outbuf));
+-			for (int col = 0; col < W; col++) {
+-				if (stopflag) return;
+-				tx_pixelnbr = col + row * W;
+-				tx_pixel =	0.3 * thorpic_TxGetPixel(tx_pixelnbr, 0) +   // red
+-							0.6 * thorpic_TxGetPixel(tx_pixelnbr, 1) +   // green
+-							0.1 * thorpic_TxGetPixel(tx_pixelnbr, 2);    // blue
+-				REQ(thor_updateTxPic, tx_pixel, tx_pixelnbr*3 + 0);
+-				REQ(thor_updateTxPic, tx_pixel, tx_pixelnbr*3 + 1);
+-				REQ(thor_updateTxPic, tx_pixel, tx_pixelnbr*3 + 2);
+-				freq = frequency + (tx_pixel - 128) * bandwidth / 256.0;
+-				phaseincr = radians * freq;
+-				for (int n = 0; n < IMAGEspp; n++) {
+-					outbuf[n] = cos(txphase);
+-					txphase -= phaseincr;
+-					if (txphase < 0) txphase += TWOPI;
+-				}
+-				ModulateXmtr(outbuf, IMAGEspp);
+-				Fl::awake();
+-			}
+-		}
+-	} else {
+-		for (int row = 0; row < H; row++) {
+-			for (int color = 0; color < 3; color++) {
+-				memset(outbuf, 0, IMAGEspp * sizeof(*outbuf));
+-				for (int col = 0; col < W; col++) {
+-					if (stopflag) return;
+-					tx_pixelnbr = col + row * W;
+-					tx_pixel = thorpic_TxGetPixel(tx_pixelnbr, color);
+-					REQ(thor_updateTxPic, tx_pixel, tx_pixelnbr*3 + color);
+-					freq = frequency + (tx_pixel - 128) * bandwidth / 256.0;
+-					phaseincr = radians * freq;
+-					for (int n = 0; n < IMAGEspp; n++) {
+-						outbuf[n] = cos(txphase);
+-						txphase -= phaseincr;
+-						if (txphase < 0) txphase += TWOPI;
+-					}
+-					ModulateXmtr(outbuf, IMAGEspp);
+-				}
+-				Fl::awake();
+-			}
+-		}
+-	}
+-	start_deadman();
+-}
+-
+-void thor::thor_send_image(std::string image_str, bool gray) {
+-	if (!image_str.empty()) {
+-		send_gray = gray;
+-		hide_after_sending = true;
+-		imageheader = image_str;
+-	}
+-	if (txstate == TX_STATE_RECEIVE)
+-		start_tx();
+-}
+-
+-void thor::send_avatar()
+-{
+-	int W = 59, H = 74;
+-	float freq, phaseincr;
+-	float radians = 2.0 * M_PI / samplerate;
+-
+-	avatarheader.clear();
+-
+-	double black[symlen];
+-
+-	memset(black, 0, sizeof(*black) * symlen);
+-
+-	freq = frequency - 0.6 * bandwidth;
+-	phaseincr = radians * freq;
+-	for (int i = 0; i < PHASE_CORR; i++) ModulateXmtr(black, symlen);
+-
+-	for (int i = 0; i < PHASE_CORR; i++) {
+-		for (int n = 0; n < symlen; n++) {
+-			black[n] = cos(txphase);
+-			txphase -= phaseincr;
+-			if (txphase < 0) txphase += TWOPI;
+-		}
+-		ModulateXmtr(black, symlen);
+-	}
+-
+-	for (int row = 0; row < H; row++) {
+-		for (int color = 0; color < 3; color++) {
+-			memset(outbuf, 0, IMAGEspp * sizeof(*outbuf));
+-			for (int col = 0; col < W; col++) {
+-				if (stopflag) return;
+-				tx_pixelnbr = col + row * W;
+-				tx_pixel = thor_get_avatar_pixel(tx_pixelnbr, color);
+-				freq = frequency + (tx_pixel - 128) * bandwidth / 256.0;
+-				phaseincr = radians * freq;
+-				for (int n = 0; n < IMAGEspp; n++) {
+-					outbuf[n] = cos(txphase);
+-					txphase -= phaseincr;
+-					if (txphase < 0) txphase += TWOPI;
+-				}
+-				ModulateXmtr(outbuf, IMAGEspp);
+-			}
+-			Fl::awake();
+-		}
+-	}
+-}
+-
+-void thor::thor_send_avatar() {
+-	if (txstate == TX_STATE_RECEIVE) {
+-		start_tx();
+-	}
+-}
+-
+-void thor::m_thor_send_avatar()
+-{
+-	std::string mycall = progdefaults.myCall;
+-	for (size_t n = 0; n < mycall.length(); n++)
+-		mycall[n] = tolower(mycall[n]);
+-	std::string fname = AvatarDir;
+-	fname.append(mycall).append(".png");
+-
+-	my_avatar_img = Fl_Shared_Image::get(fname.c_str(), 59, 74);
+-	if (!my_avatar_img) return;
+-	unsigned char *img_data = (unsigned char *)my_avatar_img->data()[0];
+-	memset(avatar, 0, sizeof(avatar));
+-	int D = my_avatar_img->d();
+-
+-	if (D == 3)
+-		memcpy(avatar, img_data, 59*74*3);
+-	else if (D == 4) {
+-		int i, j, k;
+-		for (i = 0; i < 59*74; i++) {
+-			j = i*3; k = i*4;
+-			avatar[j] = img_data[k];
+-			avatar[j+1] = img_data[k+1];
+-			avatar[j+2] = img_data[k+2];
+-		}
+-	} else if (D == 1) {
+-		int i, j;
+-		for (i = 0; i < 59*74; i++) {
+-			j = i * 3;
+-			avatar[j] = avatar[j+1] = avatar[j+2] = img_data[i];
+-		}
+-	} else {
+-		return;
+-	}
+-
+-	avatarheader = "\npic%A";
+-	thor_send_avatar();
+-}
+-
++#endif // FOXSDR_TEST_TX

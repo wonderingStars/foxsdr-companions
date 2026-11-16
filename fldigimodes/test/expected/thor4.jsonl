@@ -1,0 +1,12 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"thor4","freq":1500.0,"rsid":true}
+{"t":13.568,"type":"text","text":"p","mode":"thor4","freq":1500.0,"offset":0.00,"snr":9.0,"metric":100}
+{"t":23.552,"type":"text","text":"\r","mode":"thor4","freq":1500.0,"offset":0.00,"snr":7.1,"metric":100}
+{"t":25.856,"type":"text","text":"\rC","mode":"thor4","freq":1500.0,"offset":0.00,"snr":7.1,"metric":100}
+{"t":28.160,"type":"text","text":"Q D","mode":"thor4","freq":1500.0,"offset":0.00,"snr":7.3,"metric":100}
+{"t":30.464,"type":"text","text":"E F","mode":"thor4","freq":1500.0,"offset":0.00,"snr":7.2,"metric":100}
+{"t":33.024,"type":"text","text":"OX","mode":"thor4","freq":1500.0,"offset":0.00,"snr":7.3,"metric":100}
+{"t":35.072,"type":"text","text":"SDR","mode":"thor4","freq":1500.0,"offset":0.00,"snr":4.7,"metric":100}
+{"t":37.568,"type":"text","text":" 7","mode":"thor4","freq":1500.0,"offset":0.00,"snr":1.6,"metric":100}
+{"t":39.744,"type":"text","text":"3\r=","mode":"thor4","freq":1500.0,"offset":0.00,"snr":-1.1,"metric":100}
+{"t":41.000,"type":"text","text":"r","mode":"thor4","freq":1500.0,"offset":0.00,"snr":-2.7,"metric":94}
+{"t":41.000,"type":"stats","samples":328000,"chars":21,"text_events":10,"rsid_hits":0,"pictures_skipped":0}

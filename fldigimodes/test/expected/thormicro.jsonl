@@ -1,0 +1,12 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":8000,"mode":"thormicro","freq":1500.0,"rsid":true}
+{"t":34.048,"type":"text","text":"\rC","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":4.3,"metric":100}
+{"t":38.080,"type":"text","text":"Q ","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":4.1,"metric":100}
+{"t":41.088,"type":"text","text":"DE","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":3.9,"metric":100}
+{"t":43.584,"type":"text","text":" F","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":3.7,"metric":100}
+{"t":47.552,"type":"text","text":"O","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":2.9,"metric":100}
+{"t":50.048,"type":"text","text":"XS","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":3.0,"metric":100}
+{"t":54.080,"type":"text","text":"DR","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":3.1,"metric":100}
+{"t":56.576,"type":"text","text":" ","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":1.5,"metric":100}
+{"t":59.008,"type":"text","text":"73","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":-0.0,"metric":100}
+{"t":62.000,"type":"text","text":"\r","mode":"thormicro","freq":1500.0,"offset":0.00,"snr":-1.9,"metric":99}
+{"t":62.000,"type":"stats","samples":496000,"chars":17,"text_events":10,"rsid_hits":0,"pictures_skipped":0}

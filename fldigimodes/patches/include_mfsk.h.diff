@@ -1,0 +1,90 @@
+--- a/src/include/mfsk.h
++++ b/upstream/include/mfsk.h
+@@ -26,11 +26,8 @@
+ #ifndef _MFSK_H
+ #define _MFSK_H
+ 
+-#include <FL/Fl_Widget.H>
+-#include <FL/Fl_Double_Window.H>
+-#include <FL/Fl_Button.H>
+-#include <FL/Fl_Shared_Image.H>
+-
++// FOXSDR_HELPER: the FLTK headers, the picture viewer declarations and the file-scope picture widgets are removed
++// (see UPSTREAM.md); the receive-only helper never shows a picture.
+ #include "globals.h"
+ #include "modem.h"
+ #include "filters.h"
+@@ -39,8 +36,6 @@
+ #include "complex.h"
+ #include "mfskvaricode.h"
+ #include "mbuffer.h"
+-#include "picture.h"
+-
+ 
+ #define	MFSKSampleRate		8000
+ 
+@@ -57,47 +52,6 @@
+ 
+ class	mfsk;
+ 
+-extern 	int		print_time_left(float secs, char *str, size_t len,
+-			  		const char *prefix = "", const char *suffix = "");
+-extern	void	updateTxPic(unsigned char data);
+-extern	void	updateRxPic(unsigned char data, int pos);
+-extern	void	TxViewerResize(int W, int H);
+-extern	void	showTxViewer(int W, int H);
+-extern	void	createTxViewer();
+-extern	void	createRxViewer();
+-extern	void	showRxViewer(int W, int H);
+-extern	void	deleteRxViewer();
+-extern	void	deleteTxViewer();
+-
+-extern void cb_picRxClose( Fl_Widget *w, void *);
+-extern void cb_picRxAbort( Fl_Widget *w, void *);
+-extern void pic_TxSendColor();
+-extern void pic_TxSendGrey();
+-extern void cb_picTxSendColor( Fl_Widget *w, void *);
+-extern void cb_picTxSendGrey( Fl_Widget *w, void *);
+-extern void cb_picTxSendAbort( Fl_Widget *w, void *);
+-
+-extern	void	load_file(const char *n);
+-
+-extern	Fl_Double_Window	*picRxWin;
+-extern	picture		*picRx;
+-extern	Fl_Button	*btnpicRxSave;
+-extern	Fl_Button	*btnpicRxAbort;
+-extern	Fl_Button	*btnpicRxClose;
+-
+-extern	Fl_Double_Window	*picTxWin;
+-extern	picture		*picTx;
+-extern  Fl_Button	*btnpicTxSPP;
+-extern	Fl_Button	*btnpicTxSendColor;
+-extern	Fl_Button	*btnpicTxSendGrey;
+-extern	Fl_Button	*btnpicTxSendAbort;
+-extern	Fl_Button	*btnpicTxLoad;
+-extern	Fl_Button	*btnpicTxClose;
+-
+-extern	Fl_Shared_Image	*TxImg;
+-extern	unsigned char *xmtimg;
+-extern	unsigned char *xmtpicbuff;
+-
+ struct rxpipe {
+ 	cmplx vector[MAX_SYMBOLS];	//numtones <= 32
+ };
+@@ -111,16 +65,6 @@
+ 
+ #define SCOPESIZE 64
+ 
+-friend void updateTxPic(unsigned char data);
+-friend void cb_picRxClose( Fl_Widget *w, void *);
+-friend void cb_picRxAbort( Fl_Widget *w, void *);
+-friend void pic_TxSendColor();
+-friend void pic_TxSendGrey();
+-friend void cb_picTxSendColor( Fl_Widget *w, void *);
+-friend void cb_picTxSendGrey( Fl_Widget *w, void *);
+-friend void cb_picTxSendAbort( Fl_Widget *w, void *);
+-friend void cb_picTxSPP( Fl_Widget *w, void *);
+-friend int  load_image(const char *n);
+ 
+ public:
+ enum {

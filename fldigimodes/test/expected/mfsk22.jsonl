@@ -1,0 +1,4 @@
+{"helper":"fldigimodes","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/w1hkj/fldigi","upstream":"fldigi 4.1.23 61b97f4133c4","format":"s16","rate":11025,"mode":"mfsk22","freq":1500.0,"rsid":true}
+{"t":6.502,"type":"text","text":"\r\rCQ DE FOX","mode":"mfsk22","freq":1499.1,"offset":-0.94,"snr":50.2,"metric":92}
+{"t":8.638,"type":"text","text":"SDR 73\r\r","mode":"mfsk22","freq":1501.4,"offset":1.40,"snr":43.9,"metric":97}
+{"t":9.105,"type":"stats","samples":100386,"chars":19,"text_events":2,"rsid_hits":0,"pictures_skipped":0}
