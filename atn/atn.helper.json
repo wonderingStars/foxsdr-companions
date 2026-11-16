@@ -1,0 +1,39 @@
+{
+  "name": "atn",
+  "version": "1.0.0",
+  "protocol": 1,
+  "licence": "GPL-3.0-or-later",
+  "source": "https://github.com/szpajder/dumpvdl2",
+  "upstream": "dumpvdl2 2.7.0",
+  "executable": "atn.exe",
+  "input": "avlc",
+  "format": "avlc-hex",
+  "rate": null,
+  "events": {
+    "frame": [
+      "t",
+      "line",
+      "octets",
+      "layers",
+      "msg"
+    ],
+    "text": [
+      "t",
+      "line",
+      "text"
+    ],
+    "error": [
+      "t",
+      "line",
+      "error"
+    ],
+    "stats": [
+      "lines",
+      "frames",
+      "decoded",
+      "bad_fcs",
+      "too_short",
+      "bad_input"
+    ]
+  }
+}
