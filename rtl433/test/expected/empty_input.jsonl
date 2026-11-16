@@ -1,0 +1,2 @@
+{"helper":"rtl433","version":"25.12.0","protocol":1,"licence":"GPL-2.0-or-later","source":"https://github.com/merbanan/rtl_433","upstream":"rtl_433 25.12+0c85f7ad3566","format":"cu8","rate":250000,"centre":433920000,"protocols_built":384,"protocols_enabled":329,"hide_ids":false}
+{"t":0.000000,"type":"stats","samples":0,"bytes":0,"frames":0,"frames_ook":0,"frames_fsk":0,"frames_events":0,"events":0,"protocols_enabled":329}

@@ -1,0 +1,91 @@
+--- rtl_433/include/rtl_433_devices.h	2026-11-12 14:04:50.102627600 +0000
++++ rtl433/include/rtl_433_devices.h	2026-11-12 14:05:01.000000000 +0000
+@@ -124,7 +124,7 @@
+     DECL(maverick_et73) \
+     DECL(honeywell_wdb) \
+     DECL(honeywell_wdb_fsk) \
+-    DECL(esa_energy) \
++    DECL(removed_esa_energy) \
+     DECL(bt_rain) \
+     DECL(bresser_5in1) \
+     DECL(digitech_xc0324) \
+@@ -137,7 +137,7 @@
+     DECL(ecowitt) \
+     DECL(directv) \
+     DECL(eurochron) \
+-    DECL(ikea_sparsnas) \
++    DECL(removed_ikea_sparsnas) \
+     DECL(hcs200) \
+     DECL(tfa_303196) \
+     DECL(rubicson_48659) \
+@@ -156,19 +156,19 @@
+     DECL(auriol_afw2a1) \
+     DECL(tfa_drop_303233) \
+     DECL(dsc_security_ws4945) \
+-    DECL(ert_scm) \
++    DECL(removed_ert_scm) \
+     DECL(klimalogg) \
+     DECL(visonic_powercode) \
+     DECL(eurochron_efth800) \
+     DECL(cotech_36_7959) \
+-    DECL(scmplus) \
++    DECL(removed_scmplus) \
+     DECL(fineoffset_wh1080_fsk) \
+     DECL(tpms_abarth124) \
+     DECL(missil_ml0757) \
+     DECL(sharp_spc775) \
+     DECL(insteon) \
+-    DECL(ert_idm) \
+-    DECL(ert_netidm) \
++    DECL(removed_ert_idm) \
++    DECL(removed_ert_netidm) \
+     DECL(thermopro_tx2) \
+     DECL(acurite_590tx) \
+     DECL(secplus_v2) \
+@@ -284,7 +284,7 @@
+     DECL(revolt_zx7717) \
+     DECL(tpms_gm) \
+     DECL(rainpoint_hcs012arf) \
+-    DECL(apator_metra_erm30) \
++    DECL(removed_apator_metra_erm30) \
+     DECL(thermopro_tx7b) \
+     DECL(nexus_sauna) \
+     DECL(homelead_hg9901) \
+@@ -303,11 +303,11 @@
+     DECL(sainlogic_sa8) \
+     DECL(thermopro_tp86xb) \
+     DECL(tpms_airpuxem) \
+-    DECL(apator_metra_eitn30) \
++    DECL(removed_apator_metra_eitn30) \
+     DECL(thermopro_tp211b) \
+     DECL(tpms_trw_ook) \
+     DECL(tpms_trw_fsk) \
+-    DECL(govee_h5059) \
++    DECL(removed_govee_h5059) \
+     DECL(astrostart_2000) \
+     DECL(compustar_1wg3r) \
+     DECL(chrysler_car_remote) \
+@@ -356,8 +356,8 @@
+     DECL(en2058) \
+     DECL(tfa_30_390x) \
+     DECL(watts_wfht_rf) \
+-    DECL(govee_h5310) \
+-    DECL(govee_h5112) \
++    DECL(removed_govee_h5310) \
++    DECL(removed_govee_h5112) \
+     DECL(ecoeye) \
+     DECL(schrader_NIS315G3) \
+     DECL(fineoffset_wh52) \
+@@ -394,9 +394,9 @@
+     DECL(bresser_garden) \
+     DECL(neptune_r900bcd) \
+     DECL(olympia_9571) \
+-    DECL(cotech_36_9231) \
+-    DECL(lorawan) \
+-    DECL(elsys_ers) \
++    DECL(removed_cotech_36_9231) \
++    DECL(removed_lorawan) \
++    DECL(removed_elsys_ers) \
+     DECL(hollarm) \
+     DECL(power_smart) \
+     DECL(feron) \

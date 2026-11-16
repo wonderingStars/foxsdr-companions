@@ -1,0 +1,856 @@
+/** @file
+    Generic RF data receiver and decoder for ISM band devices using RTL-SDR and SoapySDR.
+
+    Copyright (C) 2026 Christian W. Zuckschwerdt <zany@triq.net>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include "r_flow.h"
+#include "rtl_433.h"
+#include "r_private.h"
+#include "r_device.h"
+#include "r_api.h"
+#include "baseband.h"
+#include "pulse_analyzer.h"
+#include "pulse_detect.h"
+#include "pulse_detect_fsk.h"
+#include "pulse_slicer.h"
+#include "data.h"
+#include "raw_output.h"
+#include "r_util.h"
+#include "am_analyze.h"
+#include "logger.h"
+#include "fatal.h"
+
+static void calc_rssi_snr(struct dm_state const *demod, pulse_data_t *pulse_data)
+{
+    float ook_high_estimate      = pulse_data->ook_high_estimate > 0 ? pulse_data->ook_high_estimate : 1;
+    float ook_low_estimate       = pulse_data->ook_low_estimate > 0 ? pulse_data->ook_low_estimate : 1;
+    int const OOK_MAX_HIGH_LEVEL = DB_TO_AMP(0); // Maximum estimate for high level (-0 dB)
+    float ook_max_estimate       = ook_high_estimate < OOK_MAX_HIGH_LEVEL ? ook_high_estimate : OOK_MAX_HIGH_LEVEL;
+    float asnr                   = ook_max_estimate / ook_low_estimate;
+    float foffs1                 = (float)pulse_data->fsk_f1_est / INT16_MAX * demod->samp_rate / 2.0f;
+    float foffs2                 = (float)pulse_data->fsk_f2_est / INT16_MAX * demod->samp_rate / 2.0f;
+    pulse_data->freq1_hz         = (foffs1 + demod->center_frequency);
+    pulse_data->freq2_hz         = (foffs2 + demod->center_frequency);
+    pulse_data->centerfreq_hz    = demod->center_frequency;
+    pulse_data->depth_bits       = demod->sample_size * 4;
+    // NOTE: for (CU8) amplitude is 10x (because it's squares)
+    if (demod->sample_size == 2 && !demod->use_mag_est) {                    // amplitude (CU8)
+        pulse_data->range_db = 42.1442f;                                     // 10*log10f(16384.0f) == 20*log10f(128.0f)
+        pulse_data->rssi_db  = 10.0f * log10f(ook_high_estimate) - 42.1442f; // 10*log10f(16384.0f)
+        pulse_data->noise_db = 10.0f * log10f(ook_low_estimate) - 42.1442f;  // 10*log10f(16384.0f)
+        pulse_data->snr_db   = 10.0f * log10f(asnr);
+    }
+    else {                               // magnitude (CU8, CS16)
+        pulse_data->range_db = 84.2884f; // 20*log10f(16384.0f)
+        // lowest (scaled x128) reading at  8 bit is -20*log10(128) = -42.1442 (eff. -36 dB)
+        // lowest (scaled div2) reading at 12 bit is -20*log10(1024) = -60.2060 (eff. -54 dB)
+        // lowest (scaled div2) reading at 16 bit is -20*log10(16384) = -84.2884 (eff. -78 dB)
+        pulse_data->rssi_db  = 20.0f * log10f(ook_high_estimate) - 84.2884f; // 20*log10f(16384.0f)
+        pulse_data->noise_db = 20.0f * log10f(ook_low_estimate) - 84.2884f;  // 20*log10f(16384.0f)
+        pulse_data->snr_db   = 20.0f * log10f(asnr);
+    }
+}
+
+/**
+Flush the SDR IQ data frame processing, e.g. on the end of a input file.
+
+@return Count of successful decoding events
+*/
+int flush_sdr_flow(r_cfg_t *cfg)
+{
+    return push_sdr_flow(cfg, NULL, 0);
+}
+
+/**
+Reset the SDR IQ data frame processing, e.g. on a new input file.
+*/
+void reset_sdr_flow(r_cfg_t *cfg)
+{
+    struct dm_state *demod = cfg->demod;
+
+    get_time_now(&demod->now);
+
+    demod->frame_start_ago   = 0;
+    demod->frame_end_ago     = 0;
+    demod->frame_event_count = 0;
+    demod->frame_quality     = 0;
+
+    demod->min_level_auto = 0.0f;
+    demod->noise_level    = 0.0f;
+
+    baseband_low_pass_filter_reset(&demod->lowpass_filter_state);
+    baseband_demod_FM_reset(&demod->demod_FM_state);
+
+    demod->lora_fm_history_count = 0;
+    demod->lora_fm_history_end   = 0;
+    demod->lora_fm_tail          = 0;
+    demod->lora_fm_segment       = 0;
+
+    pulse_detect_reset(demod->pulse_detect);
+    for (unsigned i = 0; i < FSK_PULSE_DETECTOR_COUNT; ++i) {
+        pulse_detect_fsk_init(&demod->pulse_detect_fsk[i]);
+    }
+    lora_fft_demod_reset(demod->lora_fft_demod);
+    lora_fm_demod_reset(demod->lora_fm_demod);
+}
+
+/// FSK pulse detectors to run, in the order their packages are tried.
+/// A single detector decides if a package is FSK. With several detectors (auto)
+/// a package is FSK if any detector's pulses decode or classic sees FSK, otherwise it stays OOK.
+/// This is the only place that resolves the pulse detect mode.
+static unsigned fsk_detector_order(struct dm_state const *demod, unsigned order[FSK_PULSE_DETECTOR_COUNT])
+{
+    switch (demod->fsk_pulse_detect_mode) {
+    case FSK_PULSE_DETECT_OLD:
+        order[0] = FSK_PULSE_DETECTOR_CLASSIC;
+        return 1;
+    case FSK_PULSE_DETECT_NEW:
+        order[0] = FSK_PULSE_DETECTOR_MINMAX;
+        return 1;
+    case FSK_PULSE_DETECT_HYSTERESIS:
+        order[0] = FSK_PULSE_DETECTOR_HYSTERESIS;
+        return 1;
+    case FSK_PULSE_DETECT_MEDIAN:
+        order[0] = FSK_PULSE_DETECTOR_MEDIAN;
+        return 1;
+    default: // FSK_PULSE_DETECT_AUTO
+        order[0] = FSK_PULSE_DETECTOR_CLASSIC;
+        order[1] = FSK_PULSE_DETECTOR_MINMAX;
+        order[2] = FSK_PULSE_DETECTOR_HYSTERESIS;
+        order[3] = FSK_PULSE_DETECTOR_MEDIAN;
+        return FSK_PULSE_DETECTOR_COUNT;
+    }
+}
+
+static char const *fsk_detector_name(unsigned detector)
+{
+    static char const *const names[FSK_PULSE_DETECTOR_COUNT] = {"classic", "minmax", "hysteresis", "median"};
+    return detector < FSK_PULSE_DETECTOR_COUNT ? names[detector] : "unknown";
+}
+
+static int dispatch_lora_packets(struct dm_state *demod,
+        lora_packet_t const *packets, int packet_count, unsigned long n_samples)
+{
+    int events = 0;
+    for (int i = 0; i < packet_count; ++i) {
+        uint64_t const buffer_end = demod->input_pos + n_samples;
+        demod->lora_start_ago = packets[i].start_offset < buffer_end
+                ? (unsigned)(buffer_end - packets[i].start_offset) : 0;
+        demod->lora_spreading_factor = packets[i].spreading_factor;
+        demod->lora_bandwidth        = packets[i].bandwidth;
+        demod->lora_coding_rate      = packets[i].coding_rate;
+        demod->lora_sync_word        = packets[i].sync_word;
+        events += run_lora_demods(&demod->r_devs,
+                packets[i].payload, packets[i].payload_len,
+                packets[i].spreading_factor, packets[i].bandwidth,
+                packets[i].sync_word);
+        demod->lora_spreading_factor = 0;
+        demod->lora_bandwidth        = 0;
+        demod->lora_coding_rate      = 0;
+        demod->lora_sync_word        = 0;
+    }
+    return events;
+}
+
+typedef struct {
+    struct dm_state *demod;
+    int16_t const *fm;
+    unsigned long buffer_samples;
+    unsigned spreading_factor;
+    uint32_t bandwidth;
+    unsigned sync_word;
+    int events;
+    int failed;
+} lora_fm_segment_context_t;
+
+#define LORA_FM_SEGMENT_HEAD 512U
+#define LORA_FM_SEGMENT_TAIL 512U
+
+/// Flags for a LoRa FM segment, i.e. the carrier span of one pulse.
+enum lora_fm_segment_flags {
+    LORA_FM_SEGMENT_START = 1U,
+    LORA_FM_SEGMENT_END   = 2U,
+};
+
+static int process_lora_fm_samples(lora_fm_segment_context_t *context,
+        int16_t const *samples, size_t count, uint64_t sample_offset)
+{
+    if (!count) {
+        return 1;
+    }
+    lora_packet_t packets[8];
+    int const packet_count = lora_fm_demod_process(
+            context->demod->lora_fm_demod, samples, count, sample_offset,
+            context->demod->samp_rate, context->spreading_factor,
+            context->bandwidth, context->sync_word, packets, 8);
+    if (packet_count < 0) {
+        print_logf(LOG_WARNING, "LoRa FM",
+                "Demodulation failed at %u samples per second",
+                context->demod->samp_rate);
+        return 0;
+    }
+    context->events += dispatch_lora_packets(context->demod, packets,
+            packet_count, context->buffer_samples);
+    return 1;
+}
+
+static void process_lora_fm_segment(lora_fm_segment_context_t *context, size_t start, size_t count,
+        uint64_t sample_offset, unsigned flags)
+{
+    struct dm_state *demod = context->demod;
+    if (flags & LORA_FM_SEGMENT_START) {
+        lora_fm_demod_reset(demod->lora_fm_demod);
+        demod->lora_fm_tail = 0;
+        context->failed     = 0;
+        size_t const head   = start < LORA_FM_SEGMENT_HEAD ? start : LORA_FM_SEGMENT_HEAD;
+        size_t const history_needed = LORA_FM_SEGMENT_HEAD - head;
+        uint64_t const block_start  = sample_offset - start;
+        if (history_needed && demod->lora_fm_history_count
+                && demod->lora_fm_history_end == block_start) {
+            size_t const history_count = demod->lora_fm_history_count < history_needed
+                    ? demod->lora_fm_history_count : history_needed;
+            size_t const history_start = demod->lora_fm_history_count - history_count;
+            context->failed = !process_lora_fm_samples(context,
+                    demod->lora_fm_history + history_start,
+                    history_count, block_start - history_count);
+        }
+        start -= head;
+        count += head;
+        sample_offset -= head;
+    }
+
+    // The envelope falls before the filtered discriminator has settled at
+    // the end of a LoRa frame. Keep a bounded tail from the same input block.
+    if ((flags & LORA_FM_SEGMENT_END) && start + count < context->buffer_samples) {
+        size_t const available = context->buffer_samples - start - count;
+        size_t const tail      = available < LORA_FM_SEGMENT_TAIL ? available : LORA_FM_SEGMENT_TAIL;
+        count += tail;
+        demod->lora_fm_tail = LORA_FM_SEGMENT_TAIL - tail;
+    }
+    else if ((flags & LORA_FM_SEGMENT_END) && context->buffer_samples) {
+        demod->lora_fm_tail = LORA_FM_SEGMENT_TAIL;
+    }
+
+    if (count && !context->failed) {
+        context->failed = !process_lora_fm_samples(context,
+                context->fm + start, count, sample_offset);
+    }
+
+    if ((flags & LORA_FM_SEGMENT_END) && (!demod->lora_fm_tail || context->failed)) {
+        demod->lora_fm_tail = 0;
+        lora_fm_demod_reset(demod->lora_fm_demod);
+    }
+}
+
+/// Feed the carrier span used for FSK detection to the LoRa FM demodulator.
+/// A segment starts on a new carrier (or a restart/retry pulse) and ends with that pulse.
+static void lora_fm_span(lora_fm_segment_context_t *context, int event, pulse_detect_span_t const *span)
+{
+    struct dm_state *demod = context->demod;
+    unsigned flags = 0;
+    if (event == PULSE_DETECT_START || event == PULSE_DETECT_RESTART || event == PULSE_DETECT_RETRY) {
+        demod->lora_fm_segment = 1; // started, no samples yet
+        return;
+    }
+    if (!demod->lora_fm_segment) {
+        return;
+    }
+    if (event == PULSE_DETECT_PULSE || event == PULSE_DETECT_OOK) {
+        flags |= LORA_FM_SEGMENT_END;
+    }
+    if (!span->len && !flags) {
+        return;
+    }
+    if (demod->lora_fm_segment == 1) {
+        flags |= LORA_FM_SEGMENT_START;
+        demod->lora_fm_segment = 2;
+    }
+    process_lora_fm_segment(context, span->start, span->len, demod->input_pos + span->start, flags);
+    if (flags & LORA_FM_SEGMENT_END) {
+        demod->lora_fm_segment = 0;
+    }
+}
+
+/// Continue a LoRa FM segment that ended close to the end of the previous buffer.
+static void process_lora_fm_tail(lora_fm_segment_context_t *context, unsigned n_samples)
+{
+    struct dm_state *demod = context->demod;
+    size_t const count     = n_samples < demod->lora_fm_tail ? n_samples : demod->lora_fm_tail;
+    if (!process_lora_fm_samples(context, demod->buf.fm, count, demod->input_pos)) {
+        demod->lora_fm_tail = 0;
+    }
+    else {
+        demod->lora_fm_tail -= count;
+    }
+    if (!demod->lora_fm_tail) {
+        lora_fm_demod_reset(demod->lora_fm_demod);
+    }
+}
+
+static void remember_lora_fm_samples(struct dm_state *demod,
+        int16_t const *fm, size_t count, uint64_t sample_offset)
+{
+    size_t const keep = count < LORA_FM_SEGMENT_HEAD ? count : LORA_FM_SEGMENT_HEAD;
+    memcpy(demod->lora_fm_history, fm + count - keep, keep * sizeof(*fm));
+    demod->lora_fm_history_count = keep;
+    demod->lora_fm_history_end   = sample_offset + count;
+}
+
+/// Run the envelope and FSK stages until a package or the buffer end is reached.
+static int detect_package(struct dm_state *demod, unsigned n_samples, lora_fm_segment_context_t *lora_fm)
+{
+    unsigned order[FSK_PULSE_DETECTOR_COUNT];
+    unsigned const order_len = fsk_detector_order(demod, order);
+
+    for (;;) {
+        pulse_detect_span_t span;
+        int event = pulse_detect_package(demod->pulse_detect, demod->am_buf, demod->buf.fm,
+                n_samples, demod->samp_rate, demod->input_pos, &demod->pulse_data, &span);
+        if (lora_fm) {
+            lora_fm_span(lora_fm, event, &span);
+        }
+        // Every detector sees the same carrier. A single detector classifies it as FSK,
+        // several (auto) offer it as FSK to the decoders, see the caller.
+        if (event == PULSE_DETECT_START || event == PULSE_DETECT_RESTART || event == PULSE_DETECT_RETRY)
+            demod->fsk_rejected = 0;
+        unsigned ready = 0;
+        for (unsigned i = 0; i < order_len; ++i) {
+            unsigned const d = order[i];
+            if (pulse_detect_fsk_package(&demod->pulse_detect_fsk[d], demod->buf.fm,
+                        &span, event, &demod->pulse_data, &demod->fsk_pulse_data_all[d], d)) {
+                ready |= 1u << d;
+            }
+        }
+        int const accept = order_len > 1 ? ready && !demod->fsk_rejected : (ready & (1u << order[0])) != 0;
+        if (accept) {
+            for (unsigned i = 0; i < order_len; ++i) {
+                unsigned const d = order[i];
+                if (ready & (1u << d)) {
+                    pulse_detect_fsk_finalize(&demod->pulse_detect_fsk[d], &demod->pulse_data,
+                            &demod->fsk_pulse_data_all[d], d);
+                }
+            }
+            demod->fsk_ready = ready;
+            if (order_len == 1)
+                pulse_detect_skip_package(demod->pulse_detect);
+            return PULSE_DATA_FSK;
+        }
+        if (event == PULSE_DETECT_OOK)
+            return PULSE_DATA_OOK;
+        if (event == PULSE_DETECT_END)
+            return 0;
+    }
+}
+
+/**
+Push an IQ data frame to the SDR IQ data frame processing.
+
+@return Count of successful decoding events
+*/
+int push_sdr_flow(r_cfg_t *cfg, unsigned char *iq_buf, uint32_t len)
+{
+    //fprintf(stderr, "push_sdr_flow... %u\n", len);
+    struct dm_state *demod = cfg->demod;
+    char time_str[LOCAL_TIME_BUFLEN];
+
+    if (!demod) {
+        // might happen when the demod closed and we get a last data frame
+        return 0; // ignore the data
+    }
+
+    unsigned n_samples = len / demod->sample_size;
+    if (n_samples * demod->sample_size != len) {
+        print_log(LOG_WARNING, __func__, "Sample buffer length not aligned to sample size!");
+    }
+
+    int process_frame = 1;
+    int const iq_input = !demod->load_info.format
+            || demod->load_info.format == CU8_IQ
+            || demod->load_info.format == CS8_IQ
+            || demod->load_info.format == CS16_IQ
+            || demod->load_info.format == CF32_IQ;
+    // The LoRa FM demodulator runs on the carrier spans of the pulse detector.
+    unsigned lora_fm_sf        = 0;
+    uint32_t lora_fm_bandwidth = 0;
+    unsigned lora_fm_sync_word = 0;
+    int const run_lora_fm      = demod->lora_fm_demod
+            && (iq_input || demod->load_info.format == S16_FM)
+            && (demod->samp_rate == 1000000 || demod->samp_rate == 2000000)
+            && get_lora_params(&demod->r_devs, &lora_fm_sf, &lora_fm_bandwidth, &lora_fm_sync_word);
+
+    // Process new frame data if available
+    if (len) {
+
+    // Feed data to all raw outputs (e.g. rtl_tcp)
+    // do this here and not in sdr_handler so realtime replay can use rtl_tcp output
+    for (void **iter = demod->raw_handler->elems; iter && *iter; ++iter) {
+        raw_output_t *output = *iter;
+        raw_output_frame(output, iq_buf, len);
+    }
+
+    // save last frame time to see if a new second started
+    time_t last_frame_sec = demod->now.tv_sec;
+    get_time_now(&demod->now);
+
+    // age the frame position if there is one
+    if (demod->frame_start_ago) {
+        demod->frame_start_ago += n_samples;
+    }
+    if (demod->frame_end_ago) {
+        demod->frame_end_ago += n_samples;
+    }
+
+    // Feed data to the sample grabber if available
+    if (demod->samp_grab) {
+        samp_grab_push(demod->samp_grab, iq_buf, len);
+    }
+
+    // AM demodulation
+    float avg_db;
+    if (demod->sample_size == 2) { // CU8
+        if (demod->use_mag_est) {
+            //magnitude_true_cu8(iq_buf, demod->buf.temp, n_samples);
+            avg_db = magnitude_est_cu8(iq_buf, demod->buf.temp, n_samples);
+        }
+        else { // amp est
+            avg_db = envelope_detect_nolut(iq_buf, demod->buf.temp, n_samples);
+        }
+    } else { // CS16
+        //magnitude_true_cs16((int16_t *)iq_buf, demod->buf.temp, n_samples);
+        avg_db = magnitude_est_cs16((int16_t *)iq_buf, demod->buf.temp, n_samples);
+    }
+
+    // Squelch silent frames
+    //fprintf(stderr, "noise level: %.1f dB current: %.1f dB min level: %.1f dB\n", demod->noise_level, avg_db, demod->min_level_auto);
+    if (demod->min_level_auto == 0.0f) {
+        demod->min_level_auto = demod->min_level;
+    }
+    if (demod->noise_level == 0.0f) {
+        demod->noise_level = demod->min_level_auto - 3.0f;
+    }
+    int noise_only = avg_db < demod->noise_level + 3.0f; // or demod->min_level_auto?
+    // always process frames if loader, dumper, or analyzers are in use, otherwise skip silent frames
+    process_frame = demod->squelch_offset <= 0 || !noise_only || demod->load_info.format || demod->analyze_pulses || demod->dumper.len || demod->samp_grab;
+    demod->total_frames_count += 1;
+    if (noise_only) {
+        demod->total_frames_squelch += 1;
+        demod->noise_level = (demod->noise_level * 7 + avg_db) / 8; // fast fall over 8 frames
+        // If auto_level and noise level well below min_level and significant change in noise level
+        if (demod->auto_level > 0 && demod->noise_level < demod->min_level - 3.0f
+                && fabsf(demod->min_level_auto - demod->noise_level - 3.0f) > 1.0f) {
+            demod->min_level_auto = demod->noise_level + 3.0f;
+            print_logf(LOG_WARNING, "Auto Level", "Estimated noise level is %.1f dB, adjusting minimum detection level to %.1f dB",
+                    demod->noise_level, demod->min_level_auto);
+            pulse_detect_set_levels(demod->pulse_detect, demod->use_mag_est, demod->level_limit, demod->min_level_auto, demod->min_snr, demod->detect_verbosity);
+        }
+    } else {
+        demod->noise_level = (demod->noise_level * 31 + avg_db) / 32; // slow rise over 32 frames
+    }
+    // Report noise every report_noise seconds, but only for the first frame that second
+    if (demod->report_noise && last_frame_sec != demod->now.tv_sec && demod->now.tv_sec % demod->report_noise == 0) {
+        print_logf(LOG_WARNING, "Auto Level", "Current %s level %.1f dB, estimated noise %.1f dB",
+                noise_only ? "noise" : "signal", avg_db, demod->noise_level);
+    }
+
+    // Run AM filters
+    if (process_frame) {
+        baseband_low_pass_filter(&demod->lowpass_filter_state, demod->buf.temp, demod->am_buf, n_samples);
+    }
+
+    // FM demodulation
+    if ((demod->enable_FM_demod || run_lora_fm) && process_frame) {
+        // Use manual FM low pass value otherwise 0.2 for minmax or 0.1 for classic and auto
+        float fm_low_pass = demod->fm_low_pass != 0.0f ? demod->fm_low_pass
+                : demod->fsk_pulse_detect_mode == FSK_PULSE_DETECT_OLD || demod->fsk_pulse_detect_mode == FSK_PULSE_DETECT_AUTO ? 0.1f : 0.2f;
+        if (demod->sample_size == 2) { // CU8
+            baseband_demod_FM(&demod->demod_FM_state, iq_buf, demod->buf.fm, n_samples, demod->samp_rate, fm_low_pass);
+        } else { // CS16
+            baseband_demod_FM_cs16(&demod->demod_FM_state, (int16_t *)iq_buf, demod->buf.fm, n_samples, demod->samp_rate, fm_low_pass);
+        }
+    }
+
+    // Handle special input formats
+    if (demod->load_info.format == S16_AM) { // The IQ buffer is really AM demodulated data
+        if (len > sizeof(demod->am_buf)) {
+            FATAL("Buffer too small");
+        }
+        memcpy(demod->am_buf, iq_buf, len);
+    } else if (demod->load_info.format == S16_FM) { // The IQ buffer is really FM demodulated data
+        // we would need AM for the envelope too
+        if (len > sizeof(demod->buf.fm)) {
+            FATAL("Buffer too small");
+        }
+        memcpy(demod->buf.fm, iq_buf, len);
+    }
+
+    }
+
+    // Run a pulse discriminator and pass packages to all configured slicers
+    int d_events = 0; // Sensor events successfully detected
+    lora_fm_segment_context_t lora_fm_context = {
+            .demod            = demod,
+            .fm               = demod->buf.fm,
+            .buffer_samples   = n_samples,
+            .spreading_factor = lora_fm_sf,
+            .bandwidth        = lora_fm_bandwidth,
+            .sync_word        = lora_fm_sync_word,
+    };
+    if (demod->lora_fm_tail) {
+        if (!run_lora_fm || !len || !process_frame) {
+            demod->lora_fm_tail = 0;
+            lora_fm_demod_reset(demod->lora_fm_demod);
+        }
+        else {
+            process_lora_fm_tail(&lora_fm_context, n_samples);
+        }
+    }
+    // The IQ/FFT analyzer is the CPU intensive opt-in alternative to filtered FM (-Y lora-fft).
+    if (demod->lora_fft_demod && len && process_frame && iq_input) {
+        unsigned spreading_factor;
+        uint32_t bandwidth;
+        unsigned sync_word;
+        if (get_lora_params(&demod->r_devs, &spreading_factor, &bandwidth, &sync_word)) {
+            lora_packet_t packets[8];
+            int packet_count;
+            if (demod->sample_size == 2) {
+                packet_count = lora_fft_demod_process_cu8(demod->lora_fft_demod, iq_buf,
+                        n_samples, demod->input_pos, demod->samp_rate,
+                        spreading_factor, bandwidth, sync_word, packets, 8);
+            }
+            else {
+                packet_count = lora_fft_demod_process_cs16(demod->lora_fft_demod,
+                        (int16_t const *)iq_buf, n_samples, demod->input_pos,
+                        demod->samp_rate, spreading_factor, bandwidth,
+                        sync_word, packets, 8);
+            }
+
+            if (packet_count < 0) {
+                print_logf(LOG_WARNING, "LoRa FFT", "No supported SF/BW candidates at %u samples per second",
+                        demod->samp_rate);
+            }
+            d_events += dispatch_lora_packets(demod, packets, packet_count, n_samples);
+        }
+    }
+    if (demod->r_devs.len || demod->analyze_pulses || demod->dumper.len || demod->samp_grab) {
+        // Detect a package and loop through demodulators with pulse data
+        int package_type = PULSE_DATA_OOK;  // Just to get us started
+        // Initialize all U8 logic buffers
+        for (void **iter = demod->dumper.elems; iter && *iter; ++iter) {
+            file_info_t const *dumper = *iter;
+            if (dumper->format == U8_LOGIC) {
+                memset(demod->u8_buf, 0, n_samples);
+                break;
+            }
+        }
+        // Age the FSK package like pulse_detect_package() ages the OOK one,
+        // i.e. only for buffers that are processed.
+        if (process_frame) {
+            for (unsigned i = 0; i < FSK_PULSE_DETECTOR_COUNT; ++i) {
+                demod->fsk_pulse_data_all[i].start_ago += n_samples;
+            }
+            demod->fsk_pulse_data.start_ago += n_samples;
+        }
+        while (package_type && process_frame) {
+            int p_events = 0; // Sensor events successfully detected per package
+            package_type = detect_package(demod, n_samples, run_lora_fm ? &lora_fm_context : NULL);
+            if (package_type) {
+                // new package: set a first frame start if we are not tracking one already
+                if (!demod->frame_start_ago) {
+                    demod->frame_start_ago = demod->pulse_data.start_ago;
+                }
+                // always update the last frame end
+                demod->frame_end_ago = demod->pulse_data.end_ago;
+            }
+            if (package_type == PULSE_DATA_OOK) {
+                calc_rssi_snr(demod, &demod->pulse_data);
+                if (demod->analyze_pulses) {
+                    fprintf(stderr, "Detected OOK package\t%s\n", time_pos_str(cfg, demod->pulse_data.start_ago, time_str));
+                }
+
+                p_events += run_ook_demods(&demod->r_devs, &demod->pulse_data);
+                demod->total_frames_ook += 1;
+                demod->total_frames_events += p_events > 0;
+                demod->frames_ook += 1;
+                demod->frames_events += p_events > 0;
+
+                // Dump pulse data for this complete package
+                for (void **iter = demod->dumper.elems; iter && *iter; ++iter) {
+                    file_info_t const *dumper = *iter;
+                    if (dumper->format == VCD_LOGIC) {
+                        pulse_data_print_vcd(dumper->file, &demod->pulse_data, '\'');
+                    }
+                    if (dumper->format == U8_LOGIC) {
+                        pulse_data_dump_raw(demod->u8_buf, n_samples, demod->input_pos, &demod->pulse_data, 0x02);
+                    }
+                    if (dumper->format == PULSE_OOK) {
+                        pulse_data_dump(dumper->file, &demod->pulse_data);
+                    }
+                }
+
+                if (demod->verbosity >= LOG_TRACE) {
+                    pulse_data_print(&demod->pulse_data);
+                }
+                if (demod->raw_mode == 1 || (demod->raw_mode == 2 && p_events == 0) || (demod->raw_mode == 3 && p_events > 0)) {
+                    data_t *data = pulse_data_print_data(&demod->pulse_data);
+                    event_occurred_handler(cfg, data);
+                }
+                if (demod->analyze_pulses && (demod->grab_mode <= 1 || (demod->grab_mode == 2 && p_events == 0) || (demod->grab_mode == 3 && p_events > 0))) {
+                    r_device device = {.log_fn = log_device_handler, .output_ctx = cfg};
+                    pulse_analyzer(&demod->pulse_data, package_type, &device);
+                }
+                if (demod->grab_mode == 4 && p_events == 0) {
+                    r_device device = {.log_fn = log_device_handler, .output_ctx = cfg};
+                    int p_quality   = pulse_analyzer_check(&demod->pulse_data, package_type, &device);
+                    demod->frame_quality = p_quality > demod->frame_quality ? p_quality : demod->frame_quality;
+                }
+            }
+            else if (package_type == PULSE_DATA_FSK) {
+                // Try the detectors in order until one decodes.
+                unsigned order[FSK_PULSE_DETECTOR_COUNT];
+                unsigned const order_len = fsk_detector_order(demod, order);
+                for (unsigned i = 0; i < order_len && p_events == 0; ++i) {
+                    unsigned const d = order[i];
+                    if (!(demod->fsk_ready & (1u << d))) {
+                        continue;
+                    }
+                    if (demod->verbosity >= LOG_TRACE) {
+                        print_logf(LOG_TRACE, "FSK", "Trying FSK detector %s (%u pulses)",
+                                fsk_detector_name(d), demod->fsk_pulse_data_all[d].num_pulses);
+                    }
+                    demod->fsk_pulse_data = demod->fsk_pulse_data_all[d];
+                    calc_rssi_snr(demod, &demod->fsk_pulse_data);
+                    p_events += run_fsk_demods(&demod->r_devs, &demod->fsk_pulse_data);
+                }
+                if (order_len > 1) {
+                    // Not decoded and classic does not see FSK either: likely an OOK package the
+                    // minmax detectors misread. Keep the OOK package, but try FSK again on its next pulse.
+                    // A package classic also sees as FSK is FSK that did not decode, e.g. a weak
+                    // repeat or a collision. It is dropped like with a single detector, keeping it
+                    // would raise the OOK levels and merge the following signals into the package.
+                    if (p_events == 0 && !(demod->fsk_ready & (1u << FSK_PULSE_DETECTOR_CLASSIC))) {
+                        demod->fsk_rejected = 1;
+                        pulse_detect_retry_fsk(demod->pulse_detect);
+                        continue;
+                    }
+                    pulse_detect_skip_package(demod->pulse_detect);
+                }
+                if (demod->analyze_pulses) {
+                    fprintf(stderr, "Detected FSK package\t%s\n", time_pos_str(cfg, demod->fsk_pulse_data.start_ago, time_str));
+                }
+
+                demod->total_frames_fsk += 1;
+                demod->total_frames_events += p_events > 0;
+                demod->frames_fsk += 1;
+                demod->frames_events += p_events > 0;
+
+                // Dump pulse data for this complete package
+                for (void **iter = demod->dumper.elems; iter && *iter; ++iter) {
+                    file_info_t const *dumper = *iter;
+                    if (dumper->format == VCD_LOGIC) {
+                        pulse_data_print_vcd(dumper->file, &demod->fsk_pulse_data, '"');
+                    }
+                    if (dumper->format == U8_LOGIC) {
+                        pulse_data_dump_raw(demod->u8_buf, n_samples, demod->input_pos, &demod->fsk_pulse_data, 0x04);
+                    }
+                    if (dumper->format == PULSE_OOK) {
+                        pulse_data_dump(dumper->file, &demod->fsk_pulse_data);
+                    }
+                }
+
+                if (demod->verbosity >= LOG_TRACE) {
+                    pulse_data_print(&demod->fsk_pulse_data);
+                }
+                if (demod->raw_mode == 1 || (demod->raw_mode == 2 && p_events == 0) || (demod->raw_mode == 3 && p_events > 0)) {
+                    data_t *data = pulse_data_print_data(&demod->fsk_pulse_data);
+                    event_occurred_handler(cfg, data);
+                }
+                if (demod->analyze_pulses && (demod->grab_mode <= 1 || (demod->grab_mode == 2 && p_events == 0) || (demod->grab_mode == 3 && p_events > 0))) {
+                    r_device device = {.log_fn = log_device_handler, .output_ctx = cfg};
+                    pulse_analyzer(&demod->fsk_pulse_data, package_type, &device);
+                }
+                if (demod->grab_mode == 4 && p_events == 0) {
+                    r_device device = {.log_fn = log_device_handler, .output_ctx = cfg};
+                    int p_quality   = pulse_analyzer_check(&demod->fsk_pulse_data, package_type, &device);
+                    demod->frame_quality = p_quality > demod->frame_quality ? p_quality : demod->frame_quality;
+                }
+            } // if (package_type == ...
+            d_events += p_events;
+        } // while (package_type)...
+
+        // add event counter to the frames currently tracked
+        demod->frame_event_count += d_events;
+
+        // end frame tracking if older than a whole buffer
+        if (demod->frame_start_ago && demod->frame_end_ago > n_samples) {
+            if (demod->samp_grab) {
+                if (demod->grab_mode == 1
+                        || (demod->grab_mode == 2 && demod->frame_event_count == 0)
+                        || (demod->grab_mode == 3 && demod->frame_event_count > 0)
+                        || (demod->grab_mode == 4 && demod->frame_event_count == 0 && demod->frame_quality > 0)) {
+                    unsigned frame_pad = n_samples / 8; // this could also be a fixed value, e.g. 10000 samples
+                    unsigned start_padded = demod->frame_start_ago + frame_pad;
+                    unsigned end_padded = demod->frame_end_ago - frame_pad;
+                    unsigned len_padded = start_padded - end_padded;
+                    samp_grab_write(demod->samp_grab, len_padded, end_padded);
+                }
+            }
+            demod->frame_start_ago   = 0;
+            demod->frame_event_count = 0;
+            demod->frame_quality     = 0;
+        }
+
+        // Dump partial pulse data, might overlap with the last complete package
+        for (void **iter = demod->dumper.elems; iter && *iter; ++iter) {
+            file_info_t const *dumper = *iter;
+            if (dumper->format == U8_LOGIC) {
+                // The package in progress is the one of the primary detector.
+                unsigned order[FSK_PULSE_DETECTOR_COUNT];
+                fsk_detector_order(demod, order);
+                pulse_data_dump_raw(demod->u8_buf, n_samples, demod->input_pos, &demod->pulse_data, 0x02);
+                pulse_data_dump_raw(demod->u8_buf, n_samples, demod->input_pos, &demod->fsk_pulse_data_all[order[0]], 0x04);
+                break;
+            }
+        }
+    }
+
+    d_events += lora_fm_context.events;
+
+    if (run_lora_fm && len && process_frame) {
+        remember_lora_fm_samples(demod, demod->buf.fm, n_samples, demod->input_pos);
+    }
+    else if (len) {
+        demod->lora_fm_history_count = 0;
+    }
+
+    // End processing if no new frame data
+    if (!len) {
+        return d_events;
+    }
+
+    // Run the AM analyzer (deprecated)
+    if (demod->am_analyze) {
+        am_analyze(demod->am_analyze, demod->am_buf, n_samples, demod->verbosity >= LOG_INFO, NULL);
+    }
+
+    // Save data to all dumpers (expect logic dumpers)
+    for (void **iter = demod->dumper.elems; iter && *iter; ++iter) {
+        file_info_t const *dumper = *iter;
+        if (!dumper->file
+                || dumper->format == VCD_LOGIC
+                || dumper->format == PULSE_OOK) {
+            continue;
+        }
+        uint8_t *out_buf = iq_buf;  // Default is to dump IQ samples
+        unsigned long out_len = n_samples * demod->sample_size;
+
+        if (dumper->format == CU8_IQ) {
+            if (demod->sample_size == 4) {
+                for (unsigned long n = 0; n < n_samples * 2; ++n)
+                    ((uint8_t *)demod->buf.temp)[n] = (((int16_t *)iq_buf)[n] / 256) + 128; // scale Q0.15 to Q0.7
+                out_buf = (uint8_t *)demod->buf.temp;
+                out_len = n_samples * 2 * sizeof(uint8_t);
+            }
+        }
+        else if (dumper->format == CS16_IQ) {
+            if (demod->sample_size == 2) {
+                for (unsigned long n = 0; n < n_samples * 2; ++n)
+                    ((int16_t *)demod->buf.temp)[n] = (iq_buf[n] * 256) - 32768; // scale Q0.7 to Q0.15
+                out_buf = (uint8_t *)demod->buf.temp; // this buffer is too small if out_block_size is large
+                out_len = n_samples * 2 * sizeof(int16_t);
+            }
+        }
+        else if (dumper->format == CS8_IQ) {
+            if (demod->sample_size == 2) {
+                for (unsigned long n = 0; n < n_samples * 2; ++n)
+                    ((int8_t *)demod->buf.temp)[n] = (iq_buf[n] - 128);
+            }
+            else if (demod->sample_size == 4) {
+                for (unsigned long n = 0; n < n_samples * 2; ++n)
+                    ((int8_t *)demod->buf.temp)[n] = ((int16_t *)iq_buf)[n] >> 8;
+            }
+            out_buf = (uint8_t *)demod->buf.temp;
+            out_len = n_samples * 2 * sizeof(int8_t);
+        }
+        else if (dumper->format == CF32_IQ) {
+            if (demod->sample_size == 2) {
+                for (unsigned long n = 0; n < n_samples * 2; ++n)
+                    ((float *)demod->buf.temp)[n] = (iq_buf[n] - 128) / 128.0f;
+            }
+            else if (demod->sample_size == 4) {
+                for (unsigned long n = 0; n < n_samples * 2; ++n)
+                    ((float *)demod->buf.temp)[n] = ((int16_t *)iq_buf)[n] / 32768.0f;
+            }
+            out_buf = (uint8_t *)demod->buf.temp; // this buffer is too small if out_block_size is large
+            out_len = n_samples * 2 * sizeof(float);
+        }
+        else if (dumper->format == S16_AM) {
+            out_buf = (uint8_t *)demod->am_buf;
+            out_len = n_samples * sizeof(int16_t);
+        }
+        else if (dumper->format == S16_FM) {
+            out_buf = (uint8_t *)demod->buf.fm;
+            out_len = n_samples * sizeof(int16_t);
+        }
+        else if (dumper->format == F32_AM) {
+            for (unsigned long n = 0; n < n_samples; ++n)
+                demod->f32_buf[n] = demod->am_buf[n] * (1.0f / 0x8000); // scale from Q0.15
+            out_buf = (uint8_t *)demod->f32_buf;
+            out_len = n_samples * sizeof(float);
+        }
+        else if (dumper->format == F32_FM) {
+            for (unsigned long n = 0; n < n_samples; ++n)
+                demod->f32_buf[n] = demod->buf.fm[n] * (1.0f / 0x8000); // scale from Q0.15
+            out_buf = (uint8_t *)demod->f32_buf;
+            out_len = n_samples * sizeof(float);
+        }
+        else if (dumper->format == F32_I) {
+            if (demod->sample_size == 2) {
+                for (unsigned long n = 0; n < n_samples; ++n)
+                    demod->f32_buf[n] = (iq_buf[n * 2] - 128) * (1.0f / 0x80); // scale from Q0.7
+            }
+            else {
+                for (unsigned long n = 0; n < n_samples; ++n)
+                    demod->f32_buf[n] = ((int16_t *)iq_buf)[n * 2] * (1.0f / 0x8000); // scale from Q0.15
+            }
+            out_buf = (uint8_t *)demod->f32_buf;
+            out_len = n_samples * sizeof(float);
+        }
+        else if (dumper->format == F32_Q) {
+            if (demod->sample_size == 2) {
+                for (unsigned long n = 0; n < n_samples; ++n)
+                    demod->f32_buf[n] = (iq_buf[n * 2 + 1] - 128) * (1.0f / 0x80); // scale from Q0.7
+            }
+            else {
+                for (unsigned long n = 0; n < n_samples; ++n)
+                    demod->f32_buf[n] = ((int16_t *)iq_buf)[n * 2 + 1] * (1.0f / 0x8000); // scale from Q0.15
+            }
+            out_buf = (uint8_t *)demod->f32_buf;
+            out_len = n_samples * sizeof(float);
+        }
+        else if (dumper->format == U8_LOGIC) { // state data
+            out_buf = demod->u8_buf;
+            out_len = n_samples;
+        }
+
+        if (fwrite(out_buf, 1, out_len, dumper->file) != out_len) {
+            print_log(LOG_ERROR, __func__, "Short write, samples lost, exiting!");
+            d_events = -1; // report error, handler should exit
+        }
+    }
+
+    demod->input_pos += n_samples;
+
+    return d_events;
+}

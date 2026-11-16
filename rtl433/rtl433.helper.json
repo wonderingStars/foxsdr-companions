@@ -1,0 +1,29 @@
+{
+  "name": "rtl433",
+  "version": "25.12.0",
+  "licence": "GPL-2.0-or-later",
+  "source": "https://github.com/merbanan/rtl_433",
+  "upstream": "rtl_433 25.12+0c85f7ad3566 (2026-11-08)",
+  "executable": "rtl433-helper.exe",
+  "protocol": 1,
+  "input": "iq",
+  "formats": ["cs16", "cu8", "cs8", "cf32"],
+  "rate": {"min": 50000, "max": 4000000, "native": 250000},
+  "centre_option": "--centre",
+  "description": "Short-range device decoders (433 / 868 / 915 MHz): weather stations, tyre-pressure sensors (TPMS), remote controls, door and alarm sensors, energy and water meters. 384 rtl_433 decoders, receive only, standard input only.",
+  "privacy": {
+    "hide_ids": true,
+    "hide_ids_note": "--hide-ids replaces every identifier field (id, ids, *_id, serial, address, ...) by a short salted hash (hNNNNNNNN) that is stable for one run, and drops raw payload fields (data, payload, raw, bits ...). The salt is random per run unless --hide-ids-salt is given."
+  },
+  "not_built": [
+    "Itron ERT SCM, SCM+, IDM, NetIDM (patent US7830874, shown active to 2029-02-09)",
+    "LoRa chirp demodulation and the LoRa / LoRaWAN decoders (Cotech 36-9231, LoRaWAN frames, ELSYS ERS)",
+    "decoders that decrypt their payload or recover a key (IKEA Sparsnas, Govee H5059 / H5112 / H5310, Apator Metra ERM30 / EITN30, ELV ESA / Gira EHZ): rule 'no decryption, no key recovery'",
+    "radio drivers (RTL-SDR, SoapySDR, rtl_tcp), network outputs (MQTT, InfluxDB, HTTP, syslog, UDP), signal-file writers, pulse analyser (replay aids)"
+  ],
+  "events": {
+    "rtl433": ["protocol", "model", "subtype", "id", "channel", "battery_ok", "battery_V", "temperature_C", "temperature_F", "humidity", "pressure_kPa", "pressure_PSI", "pressure_hPa", "wind_avg_km_h", "wind_dir_deg", "rain_mm", "button", "code", "state", "status", "alarm", "tamper", "mic", "mod", "freq", "freq1", "freq2", "rssi", "snr", "noise", "text"],
+    "stats": ["samples", "bytes", "frames", "frames_ook", "frames_fsk", "frames_events", "events", "protocols_enabled"]
+  },
+  "reserved_field": "text"
+}

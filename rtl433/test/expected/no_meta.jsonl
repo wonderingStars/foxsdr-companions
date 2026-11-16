@@ -1,0 +1,3 @@
+{"helper":"rtl433","version":"25.12.0","protocol":1,"licence":"GPL-2.0-or-later","source":"https://github.com/merbanan/rtl_433","upstream":"rtl_433 25.12+0c85f7ad3566","format":"cu8","rate":250000,"centre":433920000,"protocols_built":384,"protocols_enabled":329,"hide_ids":false}
+{"t":0.080000,"type":"rtl433","protocol":88,"model":"Toyota","rtl_type":"TPMS","id":"f0d5aee3","status":128,"pressure_PSI":34.250,"temperature_C":29.000,"mic":"CRC","text":"Toyota type=TPMS id=f0d5aee3 status=128 pressure_PSI=34.25 temperature_C=29 mic=CRC"}
+{"t":0.170100,"type":"stats","samples":42525,"bytes":85050,"frames":1,"frames_ook":0,"frames_fsk":1,"frames_events":1,"events":1,"protocols_enabled":329}
