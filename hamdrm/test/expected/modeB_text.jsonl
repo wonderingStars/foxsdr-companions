@@ -1,0 +1,13 @@
+{"helper":"hamdrm","version":"1.0.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/ON4QZ/QSSTV","format":"s16","rate":12000,"upstream":"QSSTV 31c323ccb848bade1dbab0a96890073f7b9455ea"}
+{"t":0.597,"type":"sync","state":"time","mode":"B","snr_db":0.0}
+{"t":0.597,"type":"sync","state":"frequency","mode":"B","snr_db":0.0}
+{"t":0.597,"type":"sync","state":"frame","mode":"B","snr_db":0.0}
+{"t":0.939,"type":"mode","mode":"B/2.3/Hi/16/Short","callsign":null,"snr_db":0.0}
+{"t":1.280,"type":"segment","transport_id":19520,"name":"","segment":1,"received":1,"total":2,"last_seen":true,"percent":50,"snr_db":3.5}
+{"t":1.707,"type":"segment","transport_id":19520,"name":"","segment":0,"received":2,"total":2,"last_seen":true,"percent":100,"snr_db":8.1}
+{"t":2.475,"type":"header","transport_id":19520,"name":"test.txt","size":113,"mode":"B/2.3/Hi/16/Short","snr_db":17.5}
+{"t":2.560,"type":"mode","mode":"B/2.3/Hi/16/Short","callsign":"TEST","snr_db":17.5}
+{"t":2.901,"type":"file","transport_id":19520,"name":"test.txt","size":113,"sha256":"d99ff6fa7cc80a6303c7138b2c490b7914252ceff692511b32a59c75929acc4f","saved":null,"path":null,"fec":null,"segments":2,"mode":"B/2.3/Hi/16/Short","callsign":"TEST","note":null,"snr_db":21.7}
+{"t":10.069,"type":"stats","seconds":10.1,"locked":true,"snr_db":36.1,"packets":22,"crc_failures":0,"dropped":0,"files":1}
+{"t":20.139,"type":"stats","seconds":20.1,"locked":true,"snr_db":36.2,"packets":48,"crc_failures":0,"dropped":0,"files":1}
+{"t":21.589,"type":"stats","seconds":21.6,"locked":true,"snr_db":36.2,"packets":51,"crc_failures":0,"dropped":0,"files":1,"final":true}

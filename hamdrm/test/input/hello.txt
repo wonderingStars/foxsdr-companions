@@ -1,0 +1,2 @@
+HamDRM test file from the hamdrm helper tests.
+Line two: the quick brown fox jumps over the lazy dog 0123456789.
