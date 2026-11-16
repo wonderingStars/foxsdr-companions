@@ -1,0 +1,17 @@
+{
+  "name": "stdc",
+  "version": "1.0.0",
+  "licence": "GPL-3.0",
+  "source": "https://github.com/cropinghigh/inmarsatc",
+  "upstream": "inmarsatc cda1242 (2023-07-10)",
+  "executable": "stdc-helper.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32", "cs16", "cf32", "sym"],
+  "rate": 48000,
+  "events": {
+    "packet": ["frame", "descriptor", "name", "length", "stage", "reassembled", "uncertain", "ber", "fields"],
+    "frame": ["frame", "ber", "reversed", "midstream_reversed", "uncertain"],
+    "stats": ["samples", "symbols", "frames", "packets", "packets_bad", "carrier_hz", "in_sync", "no_sync_blocks"]
+  }
+}

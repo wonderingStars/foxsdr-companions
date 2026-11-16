@@ -1,0 +1,3 @@
+{"helper":"stdc","version":"1.0.0","protocol":1,"licence":"GPL-3.0","source":"https://github.com/cropinghigh/inmarsatc","upstream":"inmarsatc cda1242 (2023-07-10)","format":"sym","rate":1200,"hide_ids":false}
+{"t":33.333,"type":"stats","samples":40000,"symbols":40000,"frames":3,"packets":0,"packets_bad":6,"carrier_hz":2600.0,"in_sync":false,"no_sync_blocks":0}
+{"t":33.333,"type":"stats","samples":40000,"symbols":40000,"frames":3,"packets":0,"packets_bad":6,"carrier_hz":2600.0,"in_sync":false,"no_sync_blocks":0,"final":true}

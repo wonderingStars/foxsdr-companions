@@ -1,0 +1,11 @@
+{"helper":"stdc","version":"1.0.0","protocol":1,"licence":"GPL-3.0","source":"https://github.com/cropinghigh/inmarsatc","upstream":"inmarsatc cda1242 (2023-07-10)","format":"sym","rate":1200,"hide_ids":false}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0xBD","name":"Multiframe Packet Start","length":12,"stage":"complete","reassembled":false,"uncertain":false,"ber":0,"multiframePacketDescriptor":"0xc0","multiframePacketLength":0}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0xBD","name":"Multiframe Packet Start","length":14,"stage":"complete","reassembled":false,"uncertain":false,"ber":0,"multiframePacketDescriptor":"0x02","multiframePacketLength":3}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0xBD","name":"Multiframe Packet Start","length":10,"stage":"complete","reassembled":false,"uncertain":false,"ber":0,"multiframePacketDescriptor":"0xbe","multiframePacketLength":8}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0xBE","name":"Multiframe Packet Continue","length":8,"stage":"none","reassembled":true,"uncertain":false,"ber":0}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0xBE","name":"Multiframe Packet Continue","length":8,"stage":"complete","reassembled":false,"uncertain":false,"ber":0,"continuedBytes":4}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0xAB","name":"Les List","length":9,"stage":"complete","reassembled":false,"uncertain":false,"ber":0,"lesListLength":7,"stationStartHex":"07","stationCount":255,"stations":[]}
+{"t":12.500,"type":"packet","frame":49152,"descriptor":"0x92","name":"Login Ack","length":13,"stage":"complete","reassembled":false,"uncertain":false,"ber":0,"loginAckLength":11,"downlinkChannelMhz":1510.5000,"les":"000001","stationStartHex":"00","stationCount":255,"stations":[]}
+{"t":33.333,"type":"stats","samples":40000,"symbols":40000,"frames":3,"packets":7,"packets_bad":53,"carrier_hz":2600.0,"in_sync":false,"no_sync_blocks":0}
+{"t":62.500,"type":"stats","samples":75000,"symbols":75000,"frames":6,"packets":7,"packets_bad":61,"carrier_hz":2600.0,"in_sync":false,"no_sync_blocks":0}
+{"t":87.500,"type":"stats","samples":105000,"symbols":105000,"frames":9,"packets":7,"packets_bad":72,"carrier_hz":2600.0,"in_sync":false,"no_sync_blocks":0,"final":true}

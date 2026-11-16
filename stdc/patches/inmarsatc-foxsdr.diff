@@ -1,0 +1,1370 @@
+--- upstream/inmarsatc_demodulator.h
++++ src/inmarsatc_demodulator.h
+@@ -1,20 +1,15 @@
+ #ifndef INMARSATC_DEMODULATOR_H
+ #define INMARSATC_DEMODULATOR_H
+ 
+-#if defined(_MSC_VER) || defined(WIN64) || defined(_WIN64) || defined(__WIN64__) || defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+-#  define Q_DECL_EXPORT __declspec(dllexport)
+-#  define Q_DECL_IMPORT __declspec(dllimport)
+-#else
+-#  define Q_DECL_EXPORT     __attribute__((visibility("default")))
+-#  define Q_DECL_IMPORT     __attribute__((visibility("default")))
+-#endif
++/* FoxSDR helper: the three upstream libraries are linked in statically, so no export/import decoration. */
++#define INMARSATC_EXPORT
+ 
+-#if defined(INMARSATC_LIBRARY)
+-#  define INMARSATC_EXPORT Q_DECL_EXPORT
+-#else
+-#  define INMARSATC_EXPORT Q_DECL_IMPORT
++#ifndef _USE_MATH_DEFINES
++#define _USE_MATH_DEFINES
+ #endif
+-
++#include <cstdint>
++#include <cstring>
++#include <cmath>
+ #include <complex>
+ #include <vector>
+ #include <algorithm>
+@@ -137,9 +132,9 @@
+                 double omega;
+                 double phase = 0.0;
+                 int noSyncCounter = 0;
+-                double error;
++                double error = 0.0;
+                 bool isInSync = false;
+-                int flagcounter;
++                int flagcounter = 0;
+                 std::complex<double> scatterPoint;
+                 std::complex<double> lastScatterPoint;
+                 // LPF1, LPF2
+--- upstream/inmarsatc_demodulator.cpp
++++ src/inmarsatc_demodulator.cpp
+@@ -1,13 +1,20 @@
++/*
++ * FoxSDR "stdc" GPL helper: demodulator part of cropinghigh/inmarsatc (commit cda1242), GPL-3.0.
++ * Based on Scytale-C (Copyright microp11 2017, GPL-3.0). Changes against upstream are marked "FOXSDR:" and
++ * listed in ../UPSTREAM.md.
++ */
+ #include <inmarsatc_demodulator.h>
+ 
+ namespace inmarsatc {
+     namespace demodulator {
+         //START CLASS FIR
+         FIR::FIR(double b[], int len) {
+-            this->b = new double[len];
+-            std::copy(b, &b[len-1], this->b);
++            // FOXSDR: upstream copied only len-1 taps into an uninitialised array, and left prevSamples
++            // uninitialised (undefined values that differ run to run). Copy all len taps, zero the history.
++            this->b = new double[len]();
++            std::copy(b, b + len, this->b);
+             psLength = len + 1;
+-            prevSamples = new double[len + 1];
++            prevSamples = new double[len + 1]();
+         }
+         double FIR::filter(double sample) {
+             //std::rotate(prevSamples, (prevSamples.begin() + 1), prevSamples.end());
+@@ -18,20 +25,18 @@
+             return filter();
+         }
+         double FIR::filter() {
++            // FOXSDR: upstream computed all psLength outputs into a variable-length array and returned the last
++            // one. Only the last is needed; this evaluates exactly that element (same arithmetic, same order).
+             int m = psLength - 1;
+-            int n = psLength;
+-            double y[n];
+-            for(int yi = 0; yi < n; yi++) {
+-                double t = 0.0;
+-                for(int bi = (m - 1); bi >= 0; bi--) {
+-                    if(yi - bi < 0) {
+-                        continue;
+-                    }
+-                    t += b[bi] * prevSamples[yi - bi];
++            int yi = psLength - 1;
++            double t = 0.0;
++            for(int bi = (m - 1); bi >= 0; bi--) {
++                if(yi - bi < 0) {
++                    continue;
+                 }
+-                y[yi] = t;
++                t += b[bi] * prevSamples[yi - bi];
+             }
+-            return y[psLength - 1];
++            return t;
+         }
+         void FIR::resetFilter() {
+             prevSamples[0] = 0;
+@@ -53,7 +58,7 @@
+                     points[i] = (4.0 * alpha + M_PI - M_PI * alpha) / (M_PI * sqrt(t));
+                 } else {
+                     fi = (((double)i) - ((double)(firstSize - 1)) / 2.0);
+-                    if(abs(1.0 - pow(4.0 * alpha * fi / t, 2)) < 0.0000000001) {
++                    if(std::fabs(1.0 - pow(4.0 * alpha * fi / t, 2)) < 0.0000000001) {
+                         points[i] = (alpha * ((M_PI - 2.0) * cos(M_PI / (4.0 * alpha)) + (M_PI + 2.0) * sin(M_PI / (4.0 * alpha))) / (M_PI * sqrt(2.0 * t)));
+                     } else {
+                         points[i] = (4.0 * alpha / (M_PI * sqrt(t)) * (cos((1.0 + alpha) * M_PI * fi / t) + t / (4.0 * alpha * fi) * sin((1.0 - alpha) * M_PI * fi / t)) / (1.0 - pow(4.0 * alpha * fi / t, 2)));
+@@ -75,6 +80,9 @@
+             maxErrorxAggression = ts / 4;
+             isOnPoint = 1;
+             sampleLastOn = std::complex<double>(0, 0);
++            // FOXSDR: members upstream leaves uninitialised
++            currentSample = sampleThisOn = error = sampleOff = std::complex<double>(0, 0);
++            result = false;
+             aggression = 0.1;
+             dummyOutput = std::complex<double>(0, 0);
+         }
+@@ -140,6 +148,10 @@
+             // this makes a huge difference
+             //stepsize = 0.001;
+             stepSize = 0.001;
++            // FOXSDR: members upstream leaves uninitialised
++            result = false;
++            mean = 1.0;
++            cmaEqualizerOut = error = std::complex<double>(0, 0);
+         }
+         bool CMA::step(std::complex<double> sample, bool isOnPoint, std::complex<double> *output) {
+             //default return and output
+@@ -235,6 +247,10 @@
+         //START CLASS Demodulator
+         Demodulator::Demodulator() {
+             flagcounter = 0;
++            // FOXSDR: members upstream leaves uninitialised (the first run of the loop read garbage)
++            error = 0.0;
++            scatterPoint = lastScatterPoint = gardnerOutputSample = cmaOutputSample = std::complex<double>(0, 0);
++            std::memset(symbolBuffer, 0, sizeof(symbolBuffer));
+             // carrier
+             omega = 2.0 * M_PI * freq / DEMODULATOR_SAMPLERATE;
+             // I and Q LPFs
+@@ -402,12 +418,15 @@
+                 uint8_t iBit = (((scatterPoint.real() > 0.0) - (scatterPoint.real() < 0.0)) + 1) / 2;
+                 //uint8_t iBit = (((scatterPoint.real() > 0.0) - (scatterPoint.real() < 0.0)) + 1.0) / 2.0;
+                 //rotate right
+-                std::copy(symbolBuffer, &symbolBuffer[DEMODULATOR_SYMBOLSPERCHUNK-1], &symbolBuffer[1]);
++                // FOXSDR: upstream used std::copy with overlapping ranges (undefined); memmove is the intended shift
++                std::memmove(&symbolBuffer[1], symbolBuffer, DEMODULATOR_SYMBOLSPERCHUNK - 1);
+                 symbolBuffer[0] = iBit;
+                 flagcounter++;
+                 if(flagcounter == DEMODULATOR_SYMBOLSPERCHUNK) {
+                     demodulator_result res;
+-                    std::copy(symbolBuffer, &symbolBuffer[DEMODULATOR_SYMBOLSPERCHUNK-1], res.bitsDemodulated);
++                    // FOXSDR: upstream copied 4999 of the 5000 symbols and left the last element of the result
++                    // uninitialised (it became the first symbol after the reverse). Copy all 5000.
++                    std::copy(symbolBuffer, symbolBuffer + DEMODULATOR_SYMBOLSPERCHUNK, res.bitsDemodulated);
+                     std::reverse(res.bitsDemodulated, res.bitsDemodulated + DEMODULATOR_SYMBOLSPERCHUNK);
+                     res.meanMagnitude = meanMagnitude;
+                     ret.push_back(res);
+--- upstream/inmarsatc_decoder.h
++++ src/inmarsatc_decoder.h
+@@ -1,20 +1,7 @@
+ #ifndef INMARSATC_DECODER_H
+ #define INMARSATC_DECODER_H
+ 
+-#if defined(_MSC_VER) || defined(WIN64) || defined(_WIN64) || defined(__WIN64__) || defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+-#  define Q_DECL_EXPORT __declspec(dllexport)
+-#  define Q_DECL_IMPORT __declspec(dllimport)
+-#else
+-#  define Q_DECL_EXPORT     __attribute__((visibility("default")))
+-#  define Q_DECL_IMPORT     __attribute__((visibility("default")))
+-#endif
+-
+-#if defined(INMARSATC_LIBRARY)
+-#  define INMARSATC_EXPORT Q_DECL_EXPORT
+-#else
+-#  define INMARSATC_EXPORT Q_DECL_IMPORT
+-#endif
+-
++/* FoxSDR helper: static linking, no export/import decoration (see UPSTREAM.md). */
+ #include <vector>
+ #include <chrono>
+ #include <inmarsatc_demodulator.h>
+@@ -76,8 +63,9 @@
+                     1, 0, 1, 1,    0, 0, 0, 1,   1, 1, 0, 1,   0, 0, 0, 0,
+                     1, 1, 0, 1,    0, 1, 1, 1,   0, 0, 1, 1,   1, 1, 0, 1
+                 };
+-                uint8_t symbolRegister[UWFINDER_FRAME_LENGTH*2];
+-                uint8_t symbolRegisterUncertain[UWFINDER_FRAME_LENGTH];
++                // FOXSDR: zero-initialised (upstream left both arrays uninitialised)
++                uint8_t symbolRegister[UWFINDER_FRAME_LENGTH*2] = {};
++                uint8_t symbolRegisterUncertain[UWFINDER_FRAME_LENGTH] = {};
+                 // There is no reason why this should not start at zero.
+                 // however if the input is a file, by setting the counter higher we force the evaluation of
+                 // less than full frames as well.
+@@ -292,8 +280,10 @@
+                 // than we'd like for K=7, especially since we chain back every 8 bits.
+                 // But it fits so nicely into a 32-bit machine word...
+                 struct State {
+-                    ulong path; // Decoded path to this state
+-                    long metric; // Cumulative metric to this state
++                    // FOXSDR: ulong/long were 64-bit on the Linux build upstream is written for and 32-bit under MSVC;
++                    // fixed-width types keep the decoder identical on both
++                    uint64_t path = 0; // Decoded path to this state
++                    int64_t metric = 0; // Cumulative metric to this state
+                 };
+         };
+ 
+@@ -348,7 +338,10 @@
+         class INMARSATC_EXPORT Decoder {
+             public:
+                 struct decoder_result {
+-                    uint8_t decodedFrame[DESCRAMBLER_FRAME_LENGTH];
++                    // FOXSDR: the parser reads fixed offsets (and CRC-checked lengths) past the 640 frame bytes on
++                    // damaged frames; a zeroed pad keeps every such read inside the object. Bytes 640.. are always 0.
++                    #define DECODER_FRAME_PADDING 1024
++                    uint8_t decodedFrame[DESCRAMBLER_FRAME_LENGTH + DECODER_FRAME_PADDING] = {};
+                     int length;
+                     int frameNumber;
+                     std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
+--- upstream/inmarsatc_decoder.cpp
++++ src/inmarsatc_decoder.cpp
+@@ -1,3 +1,8 @@
++/*
++ * FoxSDR "stdc" GPL helper: frame decoder part of cropinghigh/inmarsatc (commit cda1242), GPL-3.0.
++ * Based on Scytale-C (Copyright microp11 2017, GPL-3.0); Viterbi decoder after Phil Karn KA9Q (Copyright 1995).
++ * Changes against upstream are marked "FOXSDR:" and listed in ../UPSTREAM.md.
++ */
+ #include <inmarsatc_decoder.h>
+ 
+ namespace inmarsatc {
+@@ -51,7 +56,8 @@
+             std::vector<uwfinder_result> ret;
+             for(int pos = 0; pos < DEMODULATOR_SYMBOLSPERCHUNK; pos++) {
+                 //shift register to right with one symbol to make space for the next incoming symbol
+-                std::copy(symbolRegister, &symbolRegister[(UWFINDER_FRAME_LENGTH*2)-1], &symbolRegister[1]);
++                // FOXSDR: overlapping std::copy (undefined) replaced by memmove, the shift upstream means
++                std::memmove(&symbolRegister[1], symbolRegister, (UWFINDER_FRAME_LENGTH*2)-1);
+                 //store
+                 symbolRegister[0] = bitsDemodulated[pos];
+                 symbolCount++;
+@@ -91,7 +97,8 @@
+                             // now we reassess the result
+                             if(IsFrameDetected(false, &nUW_, &rUW_, &isReversedPolarity_, &isMidStreamReversePolarity_, &isReversedFirst_)) {
+                                 uwfinder_result res;
+-                                std::copy(symbolRegister, &symbolRegister[UWFINDER_FRAME_LENGTH-1], res.uwFrame);
++                                // FOXSDR: upstream dropped the last symbol (copy of L-1 into an uninitialised array)
++                                std::copy(symbolRegister, symbolRegister + UWFINDER_FRAME_LENGTH, res.uwFrame);
+                                 res.length = UWFINDER_FRAME_LENGTH;
+                                 res.isReversedPolarity = isReversedPolarity_;
+                                 //reverse reversed (for hard decision)
+@@ -265,12 +272,12 @@
+             }
+         }
+         ViterbiDecoder::viterbidecoder_result ViterbiDecoder::decode(uint8_t deinterleavedFrame[DEINTERLEAVER_FRAME_LENGTH], bool isHardDecision) {
+-            viterbidecoder_result res;
++            viterbidecoder_result res = {}; // FOXSDR: zero-initialised
+             int bitcnt = 0;
+             int nbits = DEINTERLEAVER_FRAME_LENGTH / 16;
+             int mets[4];
+-            long bestmetric;
+-            long beststate;
++            int64_t bestmetric;
++            int64_t beststate;
+             int i;
+             int j = 0;
+             // Initialize arrays
+@@ -310,8 +317,8 @@
+                 /// Another bonus about using the converter is that it will give you the
+                 /// indexes into the parity lookup table as well.
+                 for (i = 0; i < 32; i++) {
+-                    long m0 = 0;
+-                    long m1 = 0;
++                    int64_t m0 = 0;
++                    int64_t m1 = 0;
+                     int sym = partabIdx[i];
+                     /// Add-Compare-Select for 0 branch
+                     m0 = state[i].metric + mets[sym];
+@@ -355,17 +362,21 @@
+                             beststate = i;
+                         }
+                     }
+-                    res.viterbiFrame[j++] = (uint8_t)(state[beststate].path >> 24);
++                    if(j < VITERBIDECODER_FRAME_LENGTH) { // FOXSDR: bounds guard (cannot trigger with a 10240-symbol frame)
++                        res.viterbiFrame[j++] = (uint8_t)(state[beststate].path >> 24);
++                    }
+                 }
+             }
+             // Output remaining bits from 0 state
+             if ((i = (int)(bitcnt % 8)) != 6) {
+                 state[0].path <<= 6 - i;
+             }
+-            res.viterbiFrame[j++] = (uint8_t)(state[0].path >> 24);
+-            res.viterbiFrame[j++] = (uint8_t)(state[0].path >> 16);
+-            res.viterbiFrame[j++] = (uint8_t)(state[0].path >> 8);
+-            res.viterbiFrame[j] = (uint8_t)(state[0].path);
++            if(j + 3 < VITERBIDECODER_FRAME_LENGTH + 0) { // FOXSDR: bounds guard
++                res.viterbiFrame[j++] = (uint8_t)(state[0].path >> 24);
++                res.viterbiFrame[j++] = (uint8_t)(state[0].path >> 16);
++                res.viterbiFrame[j++] = (uint8_t)(state[0].path >> 8);
++                res.viterbiFrame[j] = (uint8_t)(state[0].path);
++            }
+             res.length = VITERBIDECODER_FRAME_LENGTH;
+             return res;
+         }
+@@ -411,7 +422,8 @@
+                 j += 4;
+             }
+             res.frameNumber = res.descramblerFrame[2] << 8 | res.descramblerFrame[3];
+-            res.timestamp = std::chrono::system_clock::now();
++            // FOXSDR: upstream stamped wall-clock time (a different clock type under MSVC, and not deterministic); the helper never uses it
++            res.timestamp = std::chrono::high_resolution_clock::time_point();
+             res.length = DESCRAMBLER_FRAME_LENGTH;
+             return res;
+         }
+@@ -454,7 +466,8 @@
+                 ViterbiDecoder::viterbidecoder_result viterbidecoder_result = viterbiDecoder->decode(deinterleaver_result.deinterleavedFrame, true);
+                 Descrambler::descrambler_result descrambler_result = descrambler->decode(viterbidecoder_result.viterbiFrame);
+                 decoder_result res;
+-                std::copy(descrambler_result.descramblerFrame, &descrambler_result.descramblerFrame[DESCRAMBLER_FRAME_LENGTH-1], res.decodedFrame);
++                // FOXSDR: upstream copied 639 of the 640 bytes and left the last byte of the frame uninitialised
++                std::copy(descrambler_result.descramblerFrame, descrambler_result.descramblerFrame + DESCRAMBLER_FRAME_LENGTH, res.decodedFrame);
+                 res.length = descrambler_result.length;
+                 res.BER = uwfinder_result[i].BER;
+                 res.frameNumber = descrambler_result.frameNumber;
+--- upstream/inmarsatc_parser.h
++++ src/inmarsatc_parser.h
+@@ -1,35 +1,39 @@
+ #ifndef INMARSATC_PARSER_H
+ #define INMARSATC_PARSER_H
+ 
+-#if defined(_MSC_VER) || defined(WIN64) || defined(_WIN64) || defined(__WIN64__) || defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+-#  define Q_DECL_EXPORT __declspec(dllexport)
+-#  define Q_DECL_IMPORT __declspec(dllimport)
+-#else
+-#  define Q_DECL_EXPORT     __attribute__((visibility("default")))
+-#  define Q_DECL_IMPORT     __attribute__((visibility("default")))
+-#endif
+-
+-#if defined(INMARSATC_LIBRARY)
+-#  define INMARSATC_EXPORT Q_DECL_EXPORT
+-#else
+-#  define INMARSATC_EXPORT Q_DECL_IMPORT
+-#endif
+-
++/* FoxSDR helper: static linking, no export/import decoration (see UPSTREAM.md). */
+ #include <vector>
+ #include <map>
++#include <string>
+ #include <iomanip>
++#include <cstdio>
+ #include <inmarsatc_decoder.h>
+ 
+ namespace inmarsatc {
+     namespace frameParser {
++        /// FOXSDR: replaces upstream's std::map<std::string, std::string> packetVars. Same keys, in the order they
++        /// were added, but each value is already a JSON value (number, true/false, string, array or object).
++        struct PacketVars {
++            std::vector<std::pair<std::string, std::string>> items;
++            static std::string quote(const std::string& s);
++            void add(const std::string& k, int v) { items.emplace_back(k, std::to_string(v)); }
++            void add(const std::string& k, double v);
++            void add(const std::string& k, bool v) { items.emplace_back(k, v ? "true" : "false"); }
++            void add(const std::string& k, const std::string& v) { items.emplace_back(k, quote(v)); }
++            void add(const std::string& k, const char* v) { items.emplace_back(k, quote(v)); }
++            void raw(const std::string& k, const std::string& json) { items.emplace_back(k, json); }
++            bool has(const std::string& k) const;
++            std::string get(const std::string& k) const;
++        };
++
+         class PacketDecoder {
+             public:
+                 struct packetDecoder_multiFramePacket {
+                     bool isMFP = false;
+-                    int multiFramePacketDescriptor;
+-                    bool isReady;
++                    int multiFramePacketDescriptor = 0;
++                    bool isReady = false;
+                     std::vector<uint8_t> packetData;
+-                    int firstPartCount;
++                    int firstPartCount = 0;
+                 };
+                 #define PACKETDECODER_PRESENTATION_IA5 0
+                 #define PACKETDECODER_PRESENTATION_ITA2 6
+@@ -42,17 +46,25 @@
+                 #define PACKETDECODER_DECODING_STAGE_PARTIAL 1
+                 #define PACKETDECODER_DECODING_STAGE_COMPLETE 2
+                 struct packetDecoder_result {
+-                    bool isDecodedPacket;
+-                    int frameNumber;
++                    bool isDecodedPacket = false;
++                    int frameNumber = 0;
+                     std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
+-                    uint8_t packetDescriptor;
+-                    int packetLength;
+-                    int decodingStage;
+-                    bool isCrc;
++                    uint8_t packetDescriptor = 0;
++                    int packetLength = 0;
++                    int decodingStage = 0;
++                    bool isCrc = false;
+                     packetDecoder_payload payload;
+-                    std::map<std::string, std::string> packetVars;
++                    PacketVars packetVars;
+                     packetDecoder_multiFramePacket mfp;
++                    // FOXSDR additions: where the packet sits in the frame, frame quality, and whether it was
++                    // reassembled from a BD/BE multiframe chain (then it carries no CRC of its own to check)
++                    int offset = 0;
++                    int ber = 0;
++                    bool isUncertain = false;
++                    bool reassembled = false;
+                 };
++                // FOXSDR: true while decoding a packet reassembled from BD/BE (its CRC bytes were never received)
++                bool allowZeroCrc = false;
+                 packetDecoder_result basicDecode(decoder::Decoder::decoder_result inputFrame, int* pos);
+                 packetDecoder_result decode_27(decoder::Decoder::decoder_result inputFrame, int* pos);
+                 packetDecoder_result decode_2A(decoder::Decoder::decoder_result inputFrame, int* pos);
+@@ -90,8 +102,10 @@
+                 static std::string getPriority(int priority);
+                 static int getAddressLength(int messageType);
+                 static bool IsBinary(std::vector<uint8_t> data, bool checkAll = false);
+-                static std::string getStations(uint8_t data[], int stationCount, int pos);
++                static void decodeEgc(decoder::Decoder::decoder_result& inputFrame, int* pos, packetDecoder_result& ret);
++                static std::string getStations(uint8_t data[], int stationCount, int pos, int limit);
+                 static std::string getServices_short(uint8_t is8);
++                static std::string hexBytes(const uint8_t* p, int n);
+                 static std::string getServices(int iss);
+                 static std::string getDescriptorAsText(uint8_t descriptor_b);
+         };
+--- upstream/inmarsatc_parser.cpp
++++ src/inmarsatc_parser.cpp
+@@ -1,7 +1,40 @@
++/*
++ * FoxSDR "stdc" GPL helper: packet parser part of cropinghigh/inmarsatc (commit cda1242), GPL-3.0.
++ * Based on Scytale-C (Copyright microp11 2017, GPL-3.0). Changes against upstream are marked "FOXSDR:" and
++ * listed in ../UPSTREAM.md. Privacy: the parser keeps no message text and no EGC payload (see UPSTREAM.md).
++ */
+ #include <inmarsatc_parser.h>
++#include <sstream>
+ 
+ namespace inmarsatc {
+     namespace frameParser {
++        //START FOXSDR PacketVars
++        std::string PacketVars::quote(const std::string& in) {
++            std::string o = "\"";
++            for(size_t i = 0; i < in.size(); i++) {
++                unsigned char c = (unsigned char)in[i];
++                if(c == '"') { o += "\\\""; }
++                else if(c == '\\') { o += "\\\\"; }
++                else if(c < 0x20 || c >= 0x7F) { char b[8]; std::snprintf(b, sizeof(b), "\\u%04x", c); o += b; }
++                else { o += (char)c; }
++            }
++            return o + "\"";
++        }
++        void PacketVars::add(const std::string& k, double v) {
++            char b[64];
++            std::snprintf(b, sizeof(b), "%.4f", v);
++            items.emplace_back(k, b);
++        }
++        bool PacketVars::has(const std::string& k) const {
++            for(size_t i = 0; i < items.size(); i++) { if(items[i].first == k) { return true; } }
++            return false;
++        }
++        std::string PacketVars::get(const std::string& k) const {
++            for(size_t i = 0; i < items.size(); i++) { if(items[i].first == k) { return items[i].second; } }
++            return std::string();
++        }
++        //END FOXSDR PacketVars
++
+         //START CLASS PacketDecoder
+         PacketDecoder::packetDecoder_result PacketDecoder::basicDecode(decoder::Decoder::decoder_result inputFrame, int* pos) {
+             packetDecoder_result ret;
+@@ -9,7 +42,7 @@
+             // As a safe precaution, in case we cannot correctly ascertain the packet length,
+             // setting the length this way will allow us to discard the whole remaining frame
+             // and avoid an infinite loop.
+-            ret.packetLength = 640 - *pos;
++            ret.packetLength = inputFrame.length - *pos;
+             // Packet descriptor
+             ret.packetDescriptor = inputFrame.decodedFrame[*pos];
+             /// There are 2 variations of packet descriptor
+@@ -27,15 +60,27 @@
+             // At this stage we do not know for sure if the CRC is correct.
+             /// We compute the 2-byte CRC and compare with the packet 2-byte CRC
+             /// The packet 2-byte CRC position is given by the packet descriptor
+-            int packetCRC = (inputFrame.decodedFrame[*pos + ret.packetLength - 2] << 8) | inputFrame.decodedFrame[*pos + ret.packetLength - 1];
+-            int computedCRC = computeCRC(inputFrame.decodedFrame, *pos, ret.packetLength);
+-            //Added a check to zero.
+-            //The BD-BE packet content is a packet that does not have a CRC.
+-            //This is a workaround to avoid computing the CRC for the content.
+-            //This needs be fixed by actually computing the CRC. TODO
+-            ret.isCrc = packetCRC == 0 || packetCRC == computedCRC;
++            // FOXSDR: a packet that runs past the end of the frame (or is too short to hold a CRC) cannot be
++            // checked; upstream read the CRC bytes from outside the frame (before it, for length 1) and could
++            // accept it.
++            bool fits = ret.packetLength >= 3 && *pos + ret.packetLength <= inputFrame.length;
++            int packetCRC = -1;
++            int computedCRC = -2;
++            if (fits) {
++                packetCRC = (inputFrame.decodedFrame[*pos + ret.packetLength - 2] << 8) | inputFrame.decodedFrame[*pos + ret.packetLength - 1];
++                computedCRC = computeCRC(inputFrame.decodedFrame, *pos, ret.packetLength);
++            }
++            // Upstream: "Added a check to zero. The BD-BE packet content is a packet that does not have a CRC.
++            // This is a workaround to avoid computing the CRC for the content. TODO".
++            // FOXSDR: the zero exception now applies only to a packet reassembled from BD/BE (allowZeroCrc), where
++            // the CRC bytes are never received; upstream accepted any packet whose CRC field was 00 00.
++            ret.isCrc = fits && (packetCRC == computedCRC || (allowZeroCrc && packetCRC == 0));
+             ret.frameNumber = inputFrame.frameNumber;
+-            ret.packetVars.insert(std::pair<std::string, std::string>("packetDescriptorText", getDescriptorAsText(ret.packetDescriptor)));
++            ret.offset = *pos;
++            ret.ber = inputFrame.BER;
++            ret.isUncertain = inputFrame.isUncertain;
++            ret.reassembled = allowZeroCrc;
++            ret.packetVars.add("packetDescriptorText", getDescriptorAsText(ret.packetDescriptor));
+             ret.timestamp = inputFrame.timestamp;
+             return ret;
+         }
+@@ -51,12 +96,12 @@
+             int lesId = inputFrame.decodedFrame[*pos + 4] & 0x3F;
+             std::string lesName = getLesName(sat, lesId);
+             int logicalChannelNo = inputFrame.decodedFrame[*pos + 5];
+-            ret.packetVars.insert(std::pair<std::string, std::string>("mesId", std::to_string(mesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("logicalChannelNo", std::to_string(logicalChannelNo)));
++            ret.packetVars.add("mesId", mesId);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("logicalChannelNo", logicalChannelNo);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_2A(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -71,18 +116,14 @@
+             int lesId = inputFrame.decodedFrame[*pos + 4] & 0x3F;
+             std::string lesName = getLesName(sat, lesId);
+             int logicalChannelNo = inputFrame.decodedFrame[*pos + 5];
+-            std::ostringstream os;
+-            for(int i = 0; i < 3; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 6 + i];
+-            }
+-            std::string unknown1Hex = os.str();
+-            ret.packetVars.insert(std::pair<std::string, std::string>("mesId", std::to_string(mesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("logicalChannelNo", std::to_string(logicalChannelNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown1Hex", unknown1Hex));
++            std::string unknown1Hex = hexBytes(&inputFrame.decodedFrame[*pos + 6], 3);
++            ret.packetVars.add("mesId", mesId);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("logicalChannelNo", logicalChannelNo);
++            ret.packetVars.add("unknown1Hex", unknown1Hex);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_08(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -97,12 +138,12 @@
+             std::string lesName = getLesName(sat, lesId);
+             int logicalChannelNo = inputFrame.decodedFrame[*pos + 2];
+             double uplinkChannelMhz = ((inputFrame.decodedFrame[*pos + 3] << 8 | (uint16_t)inputFrame.decodedFrame[*pos + 3 + 1]) - 6000) * 0.0025 + 1626.5;
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("logicalChannelNo", std::to_string(logicalChannelNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("uplinkChannelMhz", std::to_string(uplinkChannelMhz)));
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("logicalChannelNo", logicalChannelNo);
++            ret.packetVars.add("uplinkChannelMhz", uplinkChannelMhz);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_6C(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -125,13 +166,15 @@
+                 tdmslots_int[i + 3] = inputFrame.decodedFrame[*pos + 4 + j] & 3;
+                 j++;
+             }
+-            std::string tdmSlots;
++            // FOXSDR: upstream made one "slot: value" text per line; here a JSON array of the 28 slot values
++            std::string tdmSlots = "[";
+             for(int i = 0; i < 28; i++) {
+-                tdmSlots += std::to_string(i) + ": " + std::to_string(tdmslots_int[i]) + "\n";
++                tdmSlots += (i ? "," : "") + std::to_string(tdmslots_int[i]);
+             }
+-            ret.packetVars.insert(std::pair<std::string, std::string>("services", services));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("uplinkChannelMhz", std::to_string(uplinkChannelMhz)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("tdmSlots", tdmSlots));
++            tdmSlots += "]";
++            ret.packetVars.raw("services", services);
++            ret.packetVars.add("uplinkChannelMhz", uplinkChannelMhz);
++            ret.packetVars.raw("tdmSlots", tdmSlots);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_7D(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -152,17 +195,23 @@
+             int count = (inputFrame.decodedFrame[*pos + 5] >> 4 & 0x0F) * 0x02;
+             uint8_t channelType = inputFrame.decodedFrame[*pos + 6] >> 0x05;
+             std::string channelTypeName;
++            // FOXSDR: upstream's switch had no break statements, so every packet was named "Reserved"
+             switch (channelType) {
+                 case 1:
+                     channelTypeName = "NCS";
++                    break;
+                 case 2:
+                     channelTypeName = "LES TDM";
++                    break;
+                 case 3:
+                     channelTypeName = "Joint NCS and TDM";
++                    break;
+                 case 4:
+                     channelTypeName = "ST-BY NCS";
++                    break;
+                 default:
+                     channelTypeName = "Reserved";
++                    break;
+             }
+             int local = inputFrame.decodedFrame[*pos + 6] >> 2 & 0x07;
+             int sat = inputFrame.decodedFrame[*pos + 7] >> 6 & 0x03;
+@@ -170,29 +219,30 @@
+             int lesId = inputFrame.decodedFrame[*pos + 7] & 0x3F;
+             std::string lesName = getLesName(sat, lesId);
+             uint8_t status_b = inputFrame.decodedFrame[*pos + 8];
+-            std::string status;
+-            status += "Bauds600: " + std::to_string((status_b & 0x80) >> 7 == 1) + "\n";
+-            status += "Operational: " + std::to_string((status_b & 0x40) >> 6 == 1) + "\n";
+-            status += "InService: " + std::to_string((status_b & 0x20) >> 5 == 1) + "\n";
+-            status += "Clear: " + std::to_string((status_b & 0x10) >> 4 == 1) + "\n";
+-            status += "LinksOpen: " + std::to_string((status_b & 0x08) >> 3 == 1);
++            std::string status = "{";
++            status += std::string("\"Bauds600\":") + (((status_b & 0x80) >> 7 == 1) ? "true" : "false");
++            status += std::string(",\"Operational\":") + (((status_b & 0x40) >> 6 == 1) ? "true" : "false");
++            status += std::string(",\"InService\":") + (((status_b & 0x20) >> 5 == 1) ? "true" : "false");
++            status += std::string(",\"Clear\":") + (((status_b & 0x10) >> 4 == 1) ? "true" : "false");
++            status += std::string(",\"LinksOpen\":") + (((status_b & 0x08) >> 3 == 1) ? "true" : "false");
++            status += "}";
+             int iss = inputFrame.decodedFrame[*pos + 9] << 8 | inputFrame.decodedFrame[*pos + 10];
+             std::string services = getServices(iss);
+             int randomInterval = inputFrame.decodedFrame[*pos + 11];
+-            ret.packetVars.insert(std::pair<std::string, std::string>("networkVersion", std::to_string(networkVersion)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("signallingChannel", std::to_string(signallingChannel)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("count", std::to_string(count)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("channelType", std::to_string(channelType)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("channelTypeName", channelTypeName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("local", std::to_string(local)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("status", status));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("services", services));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("randomInterval", std::to_string(randomInterval)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("timestamp_str", timestamp_str));
++            ret.packetVars.add("networkVersion", networkVersion);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("signallingChannel", signallingChannel);
++            ret.packetVars.add("count", count);
++            ret.packetVars.add("channelType", (int)channelType);
++            ret.packetVars.add("channelTypeName", channelTypeName);
++            ret.packetVars.add("local", local);
++            ret.packetVars.raw("status", status);
++            ret.packetVars.raw("services", services);
++            ret.packetVars.add("randomInterval", randomInterval);
++            ret.packetVars.add("timestamp_str", timestamp_str);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_81(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -201,40 +251,33 @@
+                 return ret;
+             }
+             ret.decodingStage = PACKETDECODER_DECODING_STAGE_PARTIAL;
+-            int mesId = inputFrame.decodedFrame[*pos + 2] << 16 | inputFrame.decodedFrame[*pos + 2 + 1] << 8 | inputFrame.decodedFrame[*pos + 1 + 2];
++            // FOXSDR: upstream's third byte was [pos+1+2] = [pos+3], i.e. the middle byte twice; the neighbouring
++            // packets (83, A3, A8) and the sat byte at +5 put the identity at +2..+4
++            int mesId = inputFrame.decodedFrame[*pos + 2] << 16 | inputFrame.decodedFrame[*pos + 2 + 1] << 8 | inputFrame.decodedFrame[*pos + 2 + 2];
+             int sat = inputFrame.decodedFrame[*pos + 5] >> 6 & 0x03;
+             std::string satName = getSatName(sat);
+             int lesId = inputFrame.decodedFrame[*pos + 5] & 0x3F;
+             std::string lesName = getLesName(sat, lesId);
+             int logicalChannelNo = inputFrame.decodedFrame[*pos + 9];
+-            double downlinkChannelMhz = ((inputFrame.decodedFrame[*pos + 6] << 8 | inputFrame.decodedFrame[*pos + 6 + 1]) - 8000) * 0.0025 + 15305;
++            // FOXSDR: upstream added 15305 here; every other downlink channel in the library (83, 92, AB) adds 1530.5
++            double downlinkChannelMhz = ((inputFrame.decodedFrame[*pos + 6] << 8 | inputFrame.decodedFrame[*pos + 6 + 1]) - 8000) * 0.0025 + 1530.5;
+             int presentation = inputFrame.decodedFrame[*pos + 14];
+-            std::ostringstream os;
+-            for(int i = 0; i < 1; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 8 + i];
+-            }
+-            std::string unknown1Hex = os.str();
+-            os.clear();
+-            for(int i = 0; i < 4; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 10 + i];
+-            }
+-            std::string unknown2Hex = os.str();
+-            os.clear();
+-            for(int i = 0; i < 2; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 15 + i];
+-            }
+-            std::string unknown3Hex = os.str();
+-            ret.packetVars.insert(std::pair<std::string, std::string>("mesId", std::to_string(mesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("logicalChannelNo", std::to_string(logicalChannelNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("downlinkChannelMhz", std::to_string(downlinkChannelMhz)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("presentation", std::to_string(presentation)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown1Hex", unknown1Hex));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown2Hex", unknown2Hex));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown3Hex", unknown3Hex));
++            // FOXSDR: upstream reused one ostringstream and os.clear() does not empty it, so unknown2Hex and
++            // unknown3Hex repeated the earlier fields; each is now just its own bytes
++            std::string unknown1Hex = hexBytes(&inputFrame.decodedFrame[*pos + 8], 1);
++            std::string unknown2Hex = hexBytes(&inputFrame.decodedFrame[*pos + 10], 4);
++            std::string unknown3Hex = hexBytes(&inputFrame.decodedFrame[*pos + 15], 2);
++            ret.packetVars.add("mesId", mesId);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("logicalChannelNo", logicalChannelNo);
++            ret.packetVars.add("downlinkChannelMhz", downlinkChannelMhz);
++            ret.packetVars.add("presentation", presentation);
++            ret.packetVars.add("unknown1Hex", unknown1Hex);
++            ret.packetVars.add("unknown2Hex", unknown2Hex);
++            ret.packetVars.add("unknown3Hex", unknown3Hex);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_83(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -256,19 +299,19 @@
+             double uplinkChannelMhz = ((inputFrame.decodedFrame[*pos + 12] << 8 | inputFrame.decodedFrame[*pos + 12 + 1]) - 6000) * 0.0025 + 1626.5;
+             int frameOffset = inputFrame.decodedFrame[*pos + 14];
+             uint8_t packetDescriptor1 = inputFrame.decodedFrame[*pos + 15];
+-            ret.packetVars.insert(std::pair<std::string, std::string>("mesId", std::to_string(mesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("status_bits", std::to_string(status_bits)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("logicalChannelNo", std::to_string(logicalChannelNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("frameLength", std::to_string(frameLength)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("duration", std::to_string(duration)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("downlinkChannelMhz", std::to_string(downlinkChannelMhz)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("uplinkChannelMhz", std::to_string(uplinkChannelMhz)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("frameOffset", std::to_string(frameOffset)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("packetDescriptor1", std::to_string(packetDescriptor1)));
++            ret.packetVars.add("mesId", mesId);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("status_bits", status_bits);
++            ret.packetVars.add("logicalChannelNo", logicalChannelNo);
++            ret.packetVars.add("frameLength", frameLength);
++            ret.packetVars.add("duration", duration);
++            ret.packetVars.add("downlinkChannelMhz", downlinkChannelMhz);
++            ret.packetVars.add("uplinkChannelMhz", uplinkChannelMhz);
++            ret.packetVars.add("frameOffset", frameOffset);
++            ret.packetVars.add("packetDescriptor1", packetDescriptor1);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_91(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -285,27 +328,19 @@
+             }
+             ret.decodingStage = PACKETDECODER_DECODING_STAGE_COMPLETE;
+             int loginAckLength = inputFrame.decodedFrame[*pos + 1];
+-            std::ostringstream os;
+-            for(int i = 0; i < 3; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 2 + i];
+-            }
+-            std::string les = os.str();
++            std::string les = hexBytes(&inputFrame.decodedFrame[*pos + 2], 3);
+             double downlinkChannelMhz = ((inputFrame.decodedFrame[*pos + 5] << 8 | inputFrame.decodedFrame[*pos + 5 + 1]) - 8000) * 0.0025 + 1530.5;
+-            os.clear();
+-            for(int i = 0; i < 1; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 7 + i];
+-            }
+-            std::string stationStartHex = os.str();
+-            ret.packetVars.insert(std::pair<std::string, std::string>("loginAckLength", std::to_string(loginAckLength)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("downlinkChannelMhz", std::to_string(downlinkChannelMhz)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("les", les));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("stationStartHex", stationStartHex));
++            std::string stationStartHex = hexBytes(&inputFrame.decodedFrame[*pos + 7], 1);
++            ret.packetVars.add("loginAckLength", loginAckLength);
++            ret.packetVars.add("downlinkChannelMhz", downlinkChannelMhz);
++            ret.packetVars.add("les", les);
++            ret.packetVars.add("stationStartHex", stationStartHex);
+             if(loginAckLength > 7) {
+                 //stations
+                 int stationCount = inputFrame.decodedFrame[*pos + 8];
+-                std::string stations = getStations(inputFrame.decodedFrame, stationCount, *pos + 9);
+-                ret.packetVars.insert(std::pair<std::string, std::string>("stationCount", std::to_string(stationCount)));
+-                ret.packetVars.insert(std::pair<std::string, std::string>("stations", stations));
++                std::string stations = getStations(inputFrame.decodedFrame, stationCount, *pos + 9, *pos + ret.packetLength - 2);
++                ret.packetVars.add("stationCount", stationCount);
++                ret.packetVars.raw("stations", stations);
+             }
+             return ret;
+         }
+@@ -334,30 +369,19 @@
+             std::string satName = getSatName(sat);
+             int lesId = inputFrame.decodedFrame[*pos + 5] & 0x3F;
+             std::string lesName = getLesName(sat, lesId);
+-            std::ostringstream os;
++            // FOXSDR (privacy): the individual poll can carry a short message for one terminal. Upstream put the
++            // text in "shortMessage" and the bytes before it in "unknown1Hex"; neither is kept. Only the number of
++            // message characters is reported.
++            int shortMessageChars = 0;
+             if(ret.packetLength >= 38) {
+-                int j = *pos + 13;
+-                std::string shortMessage;
+-                for(int i = 0; j < *pos + ret.packetLength - 2; i++) {
+-                    shortMessage += (char)inputFrame.decodedFrame[j] & 0x7F; //x-IA5 encoding
+-                    j++;
+-                }
+-                ret.packetVars.insert(std::pair<std::string, std::string>("shortMessage", shortMessage));
+-                for(int i = 0; i < 6; i++) {
+-                    os << std::setfill('0') << std::setw(2) << std::right << std::hex << inputFrame.decodedFrame[*pos + 6 + i];
+-                }
+-            } else {
+-                for(int i = 0; i < ret.packetLength - 6; i++) {
+-                    os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 6 + i];
+-                }
++                shortMessageChars = ret.packetLength - 2 - 13;
+             }
+-            std::string unknown1Hex = os.str();
+-            ret.packetVars.insert(std::pair<std::string, std::string>("mesId", std::to_string(mesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown1Hex", unknown1Hex));
++            ret.packetVars.add("mesId", mesId);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("shortMessageChars", shortMessageChars);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_A8(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -371,33 +395,18 @@
+             std::string satName = getSatName(sat);
+             int lesId = inputFrame.decodedFrame[*pos + 5] & 0x3F;
+             std::string lesName = getLesName(sat, lesId);
+-            std::ostringstream os;
+-            for(int i = 0; i < 3; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 6 + i];
+-            }
+-            std::string unknown1Hex = os.str();
++            std::string unknown1Hex = hexBytes(&inputFrame.decodedFrame[*pos + 6], 3);
+             int shortMessageLength = inputFrame.decodedFrame[*pos + 9];
+-            os.clear();
+-            for(int i = 0; i < 1; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 10 + i];
+-            }
+-            std::string unknown2Hex = os.str();
+-            if(shortMessageLength > 2) {
+-                std::string shortMessage;
+-                int j = *pos + 11;
+-                for(int i = 0; j < *pos + ret.packetLength - 2; i++) {
+-                    shortMessage += (char)inputFrame.decodedFrame[j] & 0x7F; //x-IA5 encoding
+-                    j++;
+-                }
+-                ret.packetVars.insert(std::pair<std::string, std::string>("shortMessage", shortMessage));
+-            }
+-            ret.packetVars.insert(std::pair<std::string, std::string>("mesId", std::to_string(mesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown1Hex", unknown1Hex));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("unknown2Hex", unknown2Hex));
++            std::string unknown2Hex = hexBytes(&inputFrame.decodedFrame[*pos + 10], 1);
++            // FOXSDR (privacy): upstream put the message text of a confirmation in "shortMessage"; it is not kept.
++            ret.packetVars.add("mesId", mesId);
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("unknown1Hex", unknown1Hex);
++            ret.packetVars.add("shortMessageLength", shortMessageLength);
++            ret.packetVars.add("unknown2Hex", unknown2Hex);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_AA(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -412,20 +421,19 @@
+             std::string lesName = getLesName(sat, lesId);
+             int logicalChannelNo = inputFrame.decodedFrame[*pos + 3];
+             int packetNo = inputFrame.decodedFrame[*pos + 4];
+-            //in bytes, presentation agnostic
+-            int j = *pos + 5;
+-            for(int i = 0; j < *pos + ret.packetLength - 2; i++) {
+-                char c = inputFrame.decodedFrame[j];
+-                ret.payload.data8Bit.push_back(c);
+-                j++;
+-            }
+-            ret.payload.presentation = IsBinary(ret.payload.data8Bit, true) ? 7 : 0;
+-            ret.packetVars.insert(std::pair<std::string, std::string>("sat", std::to_string(sat)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("satName", satName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesId", std::to_string(lesId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesName", lesName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("logicalChannelNo", std::to_string(logicalChannelNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("packetNo", std::to_string(packetNo)));
++            // FOXSDR (privacy): upstream copied the packet's data bytes into ret.payload; that is message content for
++            // one terminal, so only its size is kept.
++            int payloadBytes = ret.packetLength - 2 - 5;
++            if(payloadBytes < 0) {
++                payloadBytes = 0;
++            }
++            ret.packetVars.add("sat", sat);
++            ret.packetVars.add("satName", satName);
++            ret.packetVars.add("lesId", lesId);
++            ret.packetVars.add("lesName", lesName);
++            ret.packetVars.add("logicalChannelNo", logicalChannelNo);
++            ret.packetVars.add("packetNo", packetNo);
++            ret.packetVars.add("payloadBytes", payloadBytes);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_AB(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -435,17 +443,13 @@
+             }
+             ret.decodingStage = PACKETDECODER_DECODING_STAGE_COMPLETE;
+             int lesListLength = inputFrame.decodedFrame[*pos + 1];
+-            std::ostringstream os;
+-            for(int i = 0; i < 1; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)inputFrame.decodedFrame[*pos + 2 + i];
+-            }
+-            std::string stationStartHex = os.str();
++            std::string stationStartHex = hexBytes(&inputFrame.decodedFrame[*pos + 2], 1);
+             int stationCount = inputFrame.decodedFrame[*pos + 3];
+-            std::string stations = getStations(inputFrame.decodedFrame, stationCount, *pos + 4);
+-            ret.packetVars.insert(std::pair<std::string, std::string>("lesListLength", std::to_string(lesListLength)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("stationStartHex", stationStartHex));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("stations", stations));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("stationCount", std::to_string(stationCount)));
++            std::string stations = getStations(inputFrame.decodedFrame, stationCount, *pos + 4, *pos + ret.packetLength - 2);
++            ret.packetVars.add("lesListLength", lesListLength);
++            ret.packetVars.add("stationStartHex", stationStartHex);
++            ret.packetVars.raw("stations", stations);
++            ret.packetVars.add("stationCount", stationCount);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_AC(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -468,46 +472,7 @@
+                 return ret;
+             }
+             ret.decodingStage = PACKETDECODER_DECODING_STAGE_PARTIAL;
+-            int messageType = inputFrame.decodedFrame[*pos + 2];
+-            std::string serviceCodeAndAddressName = getServiceCodeAndAddressName(messageType);
+-            int continuation = (inputFrame.decodedFrame[*pos + 3] & 0x80) >> 7;
+-            int priority = (inputFrame.decodedFrame[*pos + 3] & 0x60) >> 5;
+-            std::string priorityText = getPriority(priority);
+-            bool isDistress = priority == 3;
+-            int repetition = inputFrame.decodedFrame[*pos + 3] & 0x1F;
+-            int messageId = inputFrame.decodedFrame[*pos + 4] << 8 | inputFrame.decodedFrame[*pos + 5];
+-            int packetNo = inputFrame.decodedFrame[*pos + 6];
+-            bool isNewPayload = packetNo == 1;
+-            ret.payload.presentation = inputFrame.decodedFrame[*pos + 7];
+-            ret.packetVars.insert(std::pair<std::string, std::string>("messageType", std::to_string(messageType)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("serviceCodeAndAddressName", serviceCodeAndAddressName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("continuation", std::to_string(continuation)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("priority", std::to_string(priority)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("priorityText", priorityText));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("isDistress", std::to_string(isDistress)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("repetition", std::to_string(repetition)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("messageId", std::to_string(messageId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("packetNo", std::to_string(packetNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("isNewPayload", std::to_string(isNewPayload)));
+-            int addressLength = getAddressLength(messageType);
+-            //NAV/MET coordinator... area... TODO
+-            if(*pos + 8 + addressLength >= inputFrame.length) {
+-                return ret;
+-            }
+-            uint8_t address[addressLength];
+-            std::copy(&inputFrame.decodedFrame[*pos+8], &inputFrame.decodedFrame[*pos+8+addressLength], address);
+-            std::ostringstream os;
+-            for(int i = 0; i < addressLength - 1; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)address[i + 1];
+-            }
+-            std::string addressHex = os.str();
+-            int payloadLength = ret.packetLength - 2 - 8 - addressLength;
+-            int k = *pos + 8 + addressLength;
+-            for(int i = 0; k < *pos + 8 + addressLength + payloadLength; i++) {
+-                ret.payload.data8Bit.push_back(inputFrame.decodedFrame[k]);
+-                k++;
+-            }
+-            ret.packetVars.insert(std::pair<std::string, std::string>("addressHex", addressHex));
++            decodeEgc(inputFrame, pos, ret);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_B2(decoder::Decoder::decoder_result inputFrame, int* pos) {
+@@ -516,6 +481,11 @@
+                 return ret;
+             }
+             ret.decodingStage = PACKETDECODER_DECODING_STAGE_PARTIAL;
++            decodeEgc(inputFrame, pos, ret);
++            return ret;
++        }
++        // FOXSDR: upstream had the same 40 lines in decode_B1 and decode_B2; shared here
++        void PacketDecoder::decodeEgc(decoder::Decoder::decoder_result& inputFrame, int* pos, packetDecoder_result& ret) {
+             int messageType = inputFrame.decodedFrame[*pos + 2];
+             std::string serviceCodeAndAddressName = getServiceCodeAndAddressName(messageType);
+             int continuation = (inputFrame.decodedFrame[*pos + 3] & 0x80) >> 7;
+@@ -527,36 +497,34 @@
+             int packetNo = inputFrame.decodedFrame[*pos + 6];
+             bool isNewPayload = packetNo == 1;
+             ret.payload.presentation = inputFrame.decodedFrame[*pos + 7];
+-            ret.packetVars.insert(std::pair<std::string, std::string>("messageType", std::to_string(messageType)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("serviceCodeAndAddressName", serviceCodeAndAddressName));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("continuation", std::to_string(continuation)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("priority", std::to_string(priority)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("priorityText", priorityText));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("isDistress", std::to_string(isDistress)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("repetition", std::to_string(repetition)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("messageId", std::to_string(messageId)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("packetNo", std::to_string(packetNo)));
+-            ret.packetVars.insert(std::pair<std::string, std::string>("isNewPayload", std::to_string(isNewPayload)));
++            ret.packetVars.add("messageType", messageType);
++            ret.packetVars.add("serviceCodeAndAddressName", serviceCodeAndAddressName);
++            ret.packetVars.add("continuation", continuation);
++            ret.packetVars.add("priority", priority);
++            ret.packetVars.add("priorityText", priorityText);
++            ret.packetVars.add("isDistress", isDistress);
++            ret.packetVars.add("repetition", repetition);
++            ret.packetVars.add("messageId", messageId);
++            ret.packetVars.add("packetNo", packetNo);
++            ret.packetVars.add("isNewPayload", isNewPayload);
++            ret.packetVars.add("presentation", ret.payload.presentation);
+             int addressLength = getAddressLength(messageType);
+             //NAV/MET coordinator... area... TODO
+             if(*pos + 8 + addressLength >= inputFrame.length) {
+-                return ret;
++                return;
+             }
+-            uint8_t address[addressLength];
++            // FOXSDR: upstream used a variable-length array here
++            uint8_t address[8] = {};
+             std::copy(&inputFrame.decodedFrame[*pos+8], &inputFrame.decodedFrame[*pos+8+addressLength], address);
+-            std::ostringstream os;
+-            for(int i = 0; i < addressLength - 1; i++) {
+-                os << std::setfill('0') << std::setw(2) << std::right << std::hex << (uint16_t)address[i + 1];
+-            }
+-            std::string addressHex = os.str();
++            std::string addressHex = hexBytes(&address[1], addressLength - 1);
++            // FOXSDR (privacy/scope): upstream copied the broadcast text into ret.payload.data8Bit. EGC text is decoded
++            // by FoxSDR's own EGC plugin; here only the size is reported.
+             int payloadLength = ret.packetLength - 2 - 8 - addressLength;
+-            int k = *pos + 8 + addressLength;
+-            for(int i = 0; k < *pos + 8 + addressLength + payloadLength; i++) {
+-                ret.payload.data8Bit.push_back(inputFrame.decodedFrame[k]);
+-                k++;
++            if(payloadLength < 0) {
++                payloadLength = 0;
+             }
+-            ret.packetVars.insert(std::pair<std::string, std::string>("addressHex", addressHex));
+-            return ret;
++            ret.packetVars.add("addressHex", addressHex);
++            ret.packetVars.add("payloadBytes", payloadLength);
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_BD(decoder::Decoder::decoder_result inputFrame, int* pos) {
+             PacketDecoder::packetDecoder_result ret = basicDecode(inputFrame, pos);
+@@ -566,9 +534,7 @@
+             ret.decodingStage = PACKETDECODER_DECODING_STAGE_COMPLETE;
+             int multiframePacketLength = 0;
+             int multiframePacketDescriptor = inputFrame.decodedFrame[*pos + 2] & 0xFF;
+-            std::ostringstream os;
+-            os << std::setfill('0') << std::setw(2) << std::right << std::hex << multiframePacketDescriptor;
+-            std::string multiframePacketDescriptorHex = os.str();
++            std::string multiframePacketDescriptorHex = hexBytes(&inputFrame.decodedFrame[*pos + 2], 1);
+             if(multiframePacketDescriptor >> 7 == 0) {
+                 // Short packet descriptor
+                 // The packet length including CRC does not include byte 0, we add 1
+@@ -579,12 +545,23 @@
+                 multiframePacketLength = inputFrame.decodedFrame[*pos + 3] + 2;
+             }
+             //compose encapsulated packet, length includes the CRC for the composed packet
+-            ret.mfp.packetData.resize(multiframePacketLength);
++            ret.mfp.packetData.assign(multiframePacketLength, 0);
+             //set the length of payload data to be used for the new packet
+             //the payload starts at index + 2 and does not include the CRC
+             ret.mfp.firstPartCount = ret.packetLength - 2 - 2;
++            // FOXSDR: upstream copied firstPartCount bytes into a vector of multiframePacketLength bytes without
++            // comparing the two (heap overflow for an inner length of 0 or a short inner packet)
++            if(ret.mfp.firstPartCount > multiframePacketLength) {
++                ret.mfp.firstPartCount = multiframePacketLength;
++            }
++            if(ret.mfp.firstPartCount < 0) {
++                ret.mfp.firstPartCount = 0;
++            }
+             ret.mfp.isMFP = true;
++            ret.mfp.multiFramePacketDescriptor = multiframePacketDescriptor;
+             std::copy(&inputFrame.decodedFrame[*pos + 2], &inputFrame.decodedFrame[*pos + 2 + ret.mfp.firstPartCount], ret.mfp.packetData.begin());
++            ret.packetVars.add("multiframePacketDescriptor", "0x" + multiframePacketDescriptorHex);
++            ret.packetVars.add("multiframePacketLength", multiframePacketLength);
+             return ret;
+         }
+         PacketDecoder::packetDecoder_result PacketDecoder::decode_BE(decoder::Decoder::decoder_result inputFrame, int* pos, PacketDecoder::packetDecoder_multiFramePacket* mfa) {
+@@ -597,8 +574,9 @@
+             //2 for starting of packet
+             int j = *pos + 2;
+             int actualLength = 0;
++            // FOXSDR (privacy): upstream also copied the bytes into ret.payload.data8Bit; only the reassembly buffer
++            // keeps them (it is decoded, and the decoded packet is filtered like any other).
+             for(int i = 0; j < *pos + ret.packetLength - 2; i++) {
+-                ret.payload.data8Bit.push_back(inputFrame.decodedFrame[j]);
+                 if((int)mfa->packetData.size() > i + mfa->firstPartCount) {
+                     mfa->packetData[i + mfa->firstPartCount] = (inputFrame.decodedFrame[j]);
+                 }
+@@ -606,7 +584,8 @@
+                 actualLength++;
+             }
+             mfa->firstPartCount += actualLength;
+-            mfa->isReady = mfa->firstPartCount >= (int)mfa->packetData.size() - 2;
++            mfa->isReady = mfa->isMFP && mfa->firstPartCount >= (int)mfa->packetData.size() - 2;
++            ret.packetVars.add("continuedBytes", actualLength);
+             return ret;
+         }
+         int PacketDecoder::computeCRC(uint8_t *decodedFrame, int pos, int length) {
+@@ -646,18 +625,20 @@
+                     return "Unknown";
+             }
+         }
++        // FOXSDR: the case labels below were written with leading zeros (001, 044, 012 ...), which C++ reads as OCTAL
++        // (044 is 36, not 44, so the NCS was never named). They are plain decimal numbers here.
+         std::string PacketDecoder::getLesName(int sat, int lesId) {
+             int value = lesId + sat * 100;
+             std::string name;
+             switch (value) {
+-                case 001:
++                case 1:
+                 case 101:
+                 case 201:
+                 case 301:
+                     name = "Vizada-Telenor, USA";
+                     break;
+ 
+-                case 002:
++                case 2:
+                 case 102:
+                 case 302:
+                     name = "Stratos Global (Burum-2), Netherlands";
+@@ -667,21 +648,21 @@
+                     name = "Stratos Global (Aukland), New Zealand";
+                     break;
+ 
+-                case 003:
++                case 3:
+                 case 103:
+                 case 203:
+                 case 303:
+                     name = "KDDI Japan";
+                     break;
+ 
+-                case 004:
++                case 4:
+                 case 104:
+                 case 204:
+                 case 304:
+                     name = "Vizada-Telenor, Norway";
+                     break;
+ 
+-                case 044:
++                case 44:
+                 case 144:
+                 case 244:
+                 case 344:
+@@ -712,7 +693,7 @@
+                     name = "Beijing MCN, China";
+                     break;
+ 
+-                case 012:
++                case 12:
+                 case 112:
+                 case 212:
+                 case 312:
+@@ -734,7 +715,7 @@
+                     name = "Morsviazsputnik, Russia";
+                     break;
+ 
+-                case 021:
++                case 21:
+                 case 121:
+                 case 221:
+                 case 321:
+@@ -880,76 +861,58 @@
+             }
+             return isBinary;
+         }
+-        std::string PacketDecoder::getStations(uint8_t data[], int stationCount, int pos) {
+-            std::string stations;
++        std::string PacketDecoder::hexBytes(const uint8_t* p, int n) {
++            std::string o;
++            char b[4];
++            for(int i = 0; i < n; i++) {
++                std::snprintf(b, sizeof(b), "%02x", p[i]);
++                o += b;
++            }
++            return o;
++        }
++        // FOXSDR: upstream built one text blob; this builds a JSON array of station objects, never reads past the
++        // packet (limit = index of the CRC), and reads the downlink channel from bytes j+4 and j+5 (upstream used
++        // data[j+4] for both halves).
++        std::string PacketDecoder::getStations(uint8_t data[], int stationCount, int pos, int limit) {
++            std::string stations = "[";
+             int j = pos;
+-            for(int i=0; i < stationCount; i++) {
+-                stations += "Station: " + std::to_string(i) + "\n";
++            for(int i=0; i < stationCount && j + 6 <= limit; i++) {
+                 int sat = data[j] >> 6 & 0x03;
+-                stations += "   sat: " + std::to_string(sat) + "\n";
+-                std::string satName = getSatName(sat);
+-                stations += "   satName: " + satName + "\n";
+                 int lesId = data[j] & 0x3F;
+-                stations += "   lesId: " + std::to_string(lesId) + "\n";
+-                std::string lesName = getLesName(sat, lesId);
+-                stations += "   lesName: " + lesName + "\n";
+                 int servicesStart = data[j + 1];
+-                stations += "   servicesStart: " + std::to_string(servicesStart) + "\n";
+                 int iss = data[j + 2] << 8 | data[j + 3];
+-                stations += "   Services:";
+-                stations += "       MaritimeDistressAlerting: " + std::to_string((iss & 0x8000) >> 15 == 1) + "\n";
+-                stations += "       SafetyNet: " + std::to_string((iss & 0x4000) >> 14 == 1) + "\n";
+-                stations += "       InmarsatC: " + std::to_string((iss & 0x2000) >> 13 == 1) + "\n";
+-                stations += "       StoreFwd: " + std::to_string((iss & 0x1000) >> 12 == 1) + "\n";
+-                stations += "       HalfDuplex: " + std::to_string((iss & 0x800) >> 11 == 1) + "\n";
+-                stations += "       FullDuplex: " + std::to_string((iss & 0x400) >> 10 == 1) + "\n";
+-                stations += "       ClosedNetwork: " + std::to_string((iss & 0x200) >> 9 == 1) + "\n";
+-                stations += "       FleetNet: " + std::to_string((iss & 0x100) >> 8 == 1) + "\n";
+-                stations += "       PrefixSF: " + std::to_string((iss & 0x80) >> 7 == 1) + "\n";
+-                stations += "       LandMobileAlerting: " + std::to_string((iss & 0x40) >> 6 == 1) + "\n";
+-                stations += "       AeroC: " + std::to_string((iss & 0x20) >> 5 == 1) + "\n";
+-                stations += "       ITA2: " + std::to_string((iss & 0x10) >> 4 == 1) + "\n";
+-                stations += "       DATA: " + std::to_string((iss & 0x08) >> 3 == 1) + "\n";
+-                stations += "       BasicX400: " + std::to_string((iss & 0x04) >> 2 == 1) + "\n";
+-                stations += "       EnhancedX400: " + std::to_string((iss & 0x02) >> 1 == 1) + "\n";
+-                stations += "       LowPowerCMES: " + std::to_string((iss & 0x01) == 1);
+-                double downlinkChannelMhz = ((data[j + 4] << 8 | data[j + 4]) - 8000) * 0.0025 + 1530.5;
+-                stations += "  downlinkChannelMhz : " + std::to_string(downlinkChannelMhz) + "\n";
++                double downlinkChannelMhz = ((data[j + 4] << 8 | data[j + 5]) - 8000) * 0.0025 + 1530.5;
++                char dl[32];
++                std::snprintf(dl, sizeof(dl), "%.4f", downlinkChannelMhz);
++                stations += std::string(i ? "," : "") + "{\"station\":" + std::to_string(i) +
++                            ",\"sat\":" + std::to_string(sat) +
++                            ",\"satName\":" + PacketVars::quote(getSatName(sat)) +
++                            ",\"lesId\":" + std::to_string(lesId) +
++                            ",\"lesName\":" + PacketVars::quote(getLesName(sat, lesId)) +
++                            ",\"servicesStart\":" + std::to_string(servicesStart) +
++                            ",\"services\":" + getServices(iss) +
++                            ",\"downlinkChannelMhz\":" + dl + "}";
+                 j+= 6;
+             }
+-            return stations;
++            return stations + "]";
+         }
++        // FOXSDR: services come out as a JSON object of booleans (upstream: "Name: 0/1" lines)
+         std::string PacketDecoder::getServices_short(uint8_t is8) {
+-            std::string services;
+-            services += "MaritimeDistressAlerting: " + std::to_string((is8 & 0x80) >> 7 == 1) + "\n";
+-            services += "SafetyNet: " + std::to_string((is8 & 0x40) >> 6 == 1) + "\n";
+-            services += "InmarsatC: " + std::to_string((is8 & 0x20) >> 5 == 1) + "\n";
+-            services += "StoreFwd: " + std::to_string((is8 & 0x10) >> 4 == 1) + "\n";
+-            services += "HalfDuplex: " + std::to_string((is8 & 8) >> 3 == 1) + "\n";
+-            services += "FullDuplex: " + std::to_string((is8 & 4) >> 2 == 1) + "\n";
+-            services += "ClosedNetwork: " + std::to_string((is8 & 2) >> 1 == 1) + "\n";
+-            services += "FleetNet: " + std::to_string((is8 & 1) == 1);
+-            return services;
++            static const char* names[8] = {"MaritimeDistressAlerting", "SafetyNet", "InmarsatC", "StoreFwd", "HalfDuplex", "FullDuplex", "ClosedNetwork", "FleetNet"};
++            std::string o = "{";
++            for(int b = 0; b < 8; b++) {
++                o += std::string(b ? "," : "") + "\"" + names[b] + "\":" + (((is8 >> (7 - b)) & 1) ? "true" : "false");
++            }
++            return o + "}";
+         }
+         std::string PacketDecoder::getServices(int iss) {
+-            std::string services;
+-            services += "MaritimeDistressAlerting: " + std::to_string((iss & 0x8000) >> 15 == 1) + "\n";
+-            services += "SafetyNet: " + std::to_string((iss & 0x4000) >> 14 == 1) + "\n";
+-            services += "InmarsatC: " + std::to_string((iss & 0x2000) >> 13 == 1) + "\n";
+-            services += "StoreFwd: " + std::to_string((iss & 0x1000) >> 12 == 1) + "\n";
+-            services += "HalfDuplex: " + std::to_string((iss & 0x800) >> 11 == 1) + "\n";
+-            services += "FullDuplex: " + std::to_string((iss & 0x400) >> 10 == 1) + "\n";
+-            services += "ClosedNetwork: " + std::to_string((iss & 0x200) >> 9 == 1) + "\n";
+-            services += "FleetNet: " + std::to_string((iss & 0x100) >> 8 == 1) + "\n";
+-            services += "PrefixSF: " + std::to_string((iss & 0x80) >> 7 == 1) + "\n";
+-            services += "LandMobileAlerting: " + std::to_string((iss & 0x40) >> 6 == 1) + "\n";
+-            services += "AeroC: " + std::to_string((iss & 0x20) >> 5 == 1) + "\n";
+-            services += "ITA2: " + std::to_string((iss & 0x10) >> 4 == 1) + "\n";
+-            services += "DATA: " + std::to_string((iss & 0x08) >> 3 == 1) + "\n";
+-            services += "BasicX400: " + std::to_string((iss & 0x04) >> 2 == 1) + "\n";
+-            services += "EnhancedX400: " + std::to_string((iss & 0x02) >> 1 == 1) + "\n";
+-            services += "LowPowerCMES: " + std::to_string((iss & 0x01) == 1);
+-            return services;
++            static const char* names[16] = {"MaritimeDistressAlerting", "SafetyNet", "InmarsatC", "StoreFwd", "HalfDuplex", "FullDuplex", "ClosedNetwork", "FleetNet",
++                                            "PrefixSF", "LandMobileAlerting", "AeroC", "ITA2", "DATA", "BasicX400", "EnhancedX400", "LowPowerCMES"};
++            std::string o = "{";
++            for(int b = 0; b < 16; b++) {
++                o += std::string(b ? "," : "") + "\"" + names[b] + "\":" + (((iss >> (15 - b)) & 1) ? "true" : "false");
++            }
++            return o + "}";
+         }
+         std::string PacketDecoder::getDescriptorAsText(uint8_t descriptor_b) {
+             std::string descriptor;
+@@ -1045,7 +1008,15 @@
+                 *pos = 0;
+                 return ret;
+             }
+-            switch(inputFrame.decodedFrame[*pos]) {
++            // FOXSDR: how far the position moves. Upstream advanced by ret.packetLength AFTER ret had been replaced by
++            // the reassembled inner packet, so the rest of the frame was read from the wrong place.
++            int advance = 0;
++            uint8_t descriptor = inputFrame.decodedFrame[*pos];
++            // FOXSDR: inside a reassembled packet a BD/BE is not followed (it could loop forever)
++            if(packetDecoder->allowZeroCrc && (descriptor == 0xBD || descriptor == 0xBE)) {
++                descriptor = 0xFF;
++            }
++            switch(descriptor) {
+                 //No more data
+                 case 0x00:
+                     *pos = 0;
+@@ -1134,7 +1105,8 @@
+                 //BE - Multiframe Packet Continue
+                 case 0xBE:
+                     ret = packetDecoder->decode_BE(inputFrame, pos, &multiStreamFrameElements);
+-                    if(!multiStreamFrameElements.isMFP) {
++                    advance = ret.packetLength;
++                    if(!ret.isCrc || !multiStreamFrameElements.isMFP) {
+                         //if BD is not received before, don't try to decode BE
+                         break;
+                     }
+@@ -1152,17 +1124,27 @@
+                         ndfa.isReversedPolarity = inputFrame.isReversedPolarity;
+                         ndfa.isUncertain = inputFrame.isUncertain;
+                         ndfa.timestamp = inputFrame.timestamp;
+-                        //recursively decode
++                        multiStreamFrameElements.isMFP = false;
++                        multiStreamFrameElements.isReady = false;
++                        //recursively decode (FOXSDR: the reassembled packet has no CRC bytes of its own)
+                         int pos1 = 0;
++                        packetDecoder->allowZeroCrc = true;
+                         ret = detect(ndfa, &pos1);
+-                        multiStreamFrameElements.isMFP = false;
++                        packetDecoder->allowZeroCrc = false;
+                     }
+                     break;
+                 default:
+                     ret = packetDecoder->basicDecode(inputFrame, pos);
+                     break;
+             }
+-            *pos += ret.packetLength;
++            if(advance == 0) {
++                advance = ret.packetLength;
++            }
++            // FOXSDR: a packet always moves the position on (upstream relied on packetLength > 0)
++            if(advance < 1) {
++                advance = 1;
++            }
++            *pos += advance;
+             ret.isDecodedPacket = true;
+             return ret;
+         }
