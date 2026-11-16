@@ -1,0 +1,2 @@
+{"helper":"js8","version":"1.0.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/js8call/js8call","upstream":"JS8Call a7ff1be0b389d287fdc56e2ea0d06962aa68127d","format":"s16","rate":12000,"modes":"A"}
+{"t":27.000,"type":"stats","samples":324000,"slots":1,"frames":0,"frames_by_mode":{}}

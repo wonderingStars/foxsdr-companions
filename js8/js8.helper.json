@@ -1,0 +1,25 @@
+{
+  "name": "js8",
+  "version": "1.0.0",
+  "licence": "GPL-3.0-only",
+  "source": "https://github.com/js8call/js8call",
+  "upstream": "JS8Call (js8call/js8call) commit a7ff1be0b389d287fdc56e2ea0d06962aa68127d, receive side only",
+  "executable": "js8-helper.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32"],
+  "rate": 12000,
+  "options": {
+    "--modes": "speeds to decode, letters from A (Normal, 15 s), B (Fast, 10 s), C (Turbo, 6 s), E (Slow, 30 s), I (Ultra, 4 s, disabled in JS8Call itself); default ABCE",
+    "--start-time": "UTC of the first sample, in seconds since 1970 (fractions allowed); periods are aligned to UTC multiples of their length; default 0, meaning the first sample is a period boundary",
+    "--nfa": "lowest audio frequency searched, Hz (default 100)",
+    "--nfb": "highest audio frequency searched, Hz (default 4910)",
+    "--nfqso": "audio frequency tried first, Hz (default 1500)",
+    "--text-events": "also print a reserved 'text' event for every frame"
+  },
+  "events": {
+    "js8": ["mode", "speed", "slot_t", "utc", "freq", "dt", "snr", "quality", "low_confidence", "bits", "first", "last", "data_flag", "frame", "frame_type", "text", "from", "to", "cmd", "num", "grid", "cq"],
+    "stats": ["samples", "slots", "frames", "frames_by_mode"]
+  },
+  "reserved_field": "text"
+}

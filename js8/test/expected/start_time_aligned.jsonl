@@ -1,0 +1,3 @@
+{"helper":"js8","version":"1.0.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/js8call/js8call","upstream":"JS8Call a7ff1be0b389d287fdc56e2ea0d06962aa68127d","format":"s16","rate":12000,"modes":"A"}
+{"t":27.000,"type":"js8","mode":"A","speed":"Normal","slot_t":12.000,"utc":"2023-11-14T22:13:30Z","freq":1500.0,"dt":0.00,"snr":-17,"quality":1.00,"low_confidence":false,"bits":3,"first":true,"last":true,"data_flag":false,"frame":"2URtg4DOOiD0","frame_type":"heartbeat","text":"K1ABC: @HB HEARTBEAT FN42 ","from":"K1ABC","grid":"FN42","cq":"HB"}
+{"t":27.000,"type":"stats","samples":324000,"slots":1,"frames":1,"frames_by_mode":{"A":1}}
