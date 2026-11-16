@@ -1,0 +1,2 @@
+{"helper":"multimon","version":"1.6.2","protocol":1,"licence":"GPL-2.0-or-later","source":"https://github.com/EliasOenal/multimon-ng","upstream":"multimon-ng 1.6.2 b5f7d71c5e9b","format":"s16","rate":22050,"demods":["FLEX"]}
+{"t":2.495,"type":"FLEX","baud":1600,"levels":2,"fragment":"K","phase":"A","cycle":0,"frame":0,"capcode":1234567,"capcodes":[1234567],"kind":"ALN","message":"Hello FLEX","text":"FLEX|1600/2/K/A|00.000|001234567|ALN|Hello FLEX"}

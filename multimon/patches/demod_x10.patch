@@ -1,0 +1,51 @@
+--- a/demod_x10.c	2026-11-12 13:09:17.900646500 +0000
++++ b/upstream/demod_x10.c	2026-11-12 13:18:24.220517000 +0000
+@@ -66,7 +66,7 @@
+ 
+ void printbits(unsigned char v) {
+     int i; // for C89 compatability
+-    for(i = 7; i >= 0; i--) fputc( ('0' + ((v >> i) & 1)), stderr);
++    for(i = 7; i >= 0; i--) verbprintf(0, "%c", '0' + ((v >> i) & 1));
+ }
+ 
+ static void x10_report(struct demod_state *s, int clr) {
+@@ -75,23 +75,23 @@
+     if (s->l1.x10.bi == 0) 
+ 	return;
+ 
+-    fprintf(stderr, "bstring = %s\n", s->l1.x10.bstring);
++    verbprintf(0, "bstring = %s\n", s->l1.x10.bstring);
+ 
+-    fprintf(stderr, "bytes = ");
++    verbprintf(0, "bytes = ");
+ 
+     printbits(s->l1.x10.b[0]);
+-    fputs(" ", stderr);
++    verbprintf(0, " ");
+ 
+     printbits(s->l1.x10.b[1]);
+-    fputs(" ", stderr);
++    verbprintf(0, " ");
+ 
+     printbits(s->l1.x10.b[2]);
+-    fputs(" ", stderr);
++    verbprintf(0, " ");
+ 
+     printbits(s->l1.x10.b[3]);
+-    fputs("\n", stderr);
++    verbprintf(0, "\n");
+ 
+-    fprintf(stderr, "\t %.2hhX %.2hhX %.2hhX %.2hhX\n", s->l1.x10.b[0], s->l1.x10.b[1], s->l1.x10.b[2], s->l1.x10.b[3]);
++    verbprintf(0, "\t %.2hhX %.2hhX %.2hhX %.2hhX\n", s->l1.x10.b[0], s->l1.x10.b[1], s->l1.x10.b[2], s->l1.x10.b[3]);
+ 
+     if ( s->l1.x10.bi == 32 ) {
+ 	u = 0;
+@@ -106,7 +106,7 @@
+ 	    u |= 0x08;
+ 
+ 	u++;
+-	fprintf(stderr, "housecode = %c %d\n", h, u);
++	verbprintf(0, "housecode = %c %d\n", h, u);
+     }
+ 
+ 
