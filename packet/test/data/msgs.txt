@@ -1,0 +1,2 @@
+W1ABC-9>APRS,WIDE1-1,WIDE2-1:!4237.14N/07120.83W>Dire Wolf test frame number one 0123456789
+N0CALL>APDW18,K1XYZ*:=4903.50N/07201.75W-Second frame with a digipeater and a longer text field abcdefghijklmnopqrstuvwxyz

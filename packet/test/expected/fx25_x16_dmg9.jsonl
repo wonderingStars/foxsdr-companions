@@ -1,0 +1,2 @@
+{"helper":"packet","version":"1.0.1","protocol":1,"licence":"GPL-2.0-or-later","source":"https://github.com/wb2osz/direwolf","upstream":"Dire Wolf 1.8.2 (eda1383f5fa9d8ba3cb27f99db1d2c79494404c9)","format":"s16","rate":44100,"baud":1200,"modem":"afsk","profile":"A","sanity":"ax25","fix_bits":0}
+{"t":3.5228,"type":"stats","samples":155355,"frames":0,"ax25":0,"fx25":0,"il2p":0,"fx25_corrected":0,"il2p_corrected":0}

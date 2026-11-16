@@ -1,0 +1,25 @@
+{
+  "name": "packet",
+  "version": "1.0.1",
+  "licence": "GPL-2.0-or-later",
+  "source": "https://github.com/wb2osz/direwolf",
+  "upstream": "Dire Wolf 1.8.2 (commit eda1383f5fa9)",
+  "executable": "packet-helper.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32"],
+  "rate": {"min": 8000, "max": 192000, "default": 48000},
+  "options": {
+    "--baud": ["300", "1200", "9600"],
+    "--profile": "AFSK demodulator profile letters (default A+)",
+    "--fix-bits": ["0", "1", "2", "3", "4"],
+    "--sanity": ["ax25", "aprs", "none"]
+  },
+  "events": {
+    "ax25": ["text", "src", "dst", "via", "heard", "control", "pid", "frame", "aprs", "info_len", "info_hex", "info_text", "fix", "level", "mark", "space", "subchan", "slice"],
+    "fx25": ["text", "src", "dst", "via", "heard", "control", "pid", "frame", "aprs", "info_len", "info_hex", "info_text", "corrected", "level", "mark", "space", "subchan", "slice"],
+    "il2p": ["text", "src", "dst", "via", "heard", "control", "pid", "frame", "aprs", "info_len", "info_hex", "info_text", "corrected", "level", "mark", "space", "subchan", "slice"],
+    "stats": ["samples", "frames", "ax25", "fx25", "il2p", "fx25_corrected", "il2p_corrected"]
+  },
+  "reserved_field": "text"
+}
