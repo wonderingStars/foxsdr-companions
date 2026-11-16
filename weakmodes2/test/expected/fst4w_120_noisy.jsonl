@@ -1,0 +1,3 @@
+{"helper":"weakmodes2","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/adswill/OnAir","upstream":"OnAir e118396b25d5 (hfdig FST4/FST4W/Q65 after WSJT-X, sourceforge.net/p/wsjt/wsjtx b4f9a431bcf6)","attribution":"Based on OnAir by Kristijonas Adomaitis - https://on-air.dev","format":"s16","rate":12000,"decoders":["FST4W:120"]}
+{"t":120.000,"type":"decode","mode":"FST4W","sub":"120","period":120,"slot":0,"freq":1500.0,"snr":-29,"dt":0.2,"dbm":37,"call":"K1ABC","grid":"FN42","text":"K1ABC FN42 37"}
+{"t":120.000,"type":"stats","samples":1440000,"slots_decoded":1,"decodes":1}

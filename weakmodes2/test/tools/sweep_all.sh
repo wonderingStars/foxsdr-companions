@@ -1,0 +1,17 @@
+#!/bin/bash
+# Runs the sensitivity sweeps used for the thresholds in README.md / UPSTREAM.md. Usage: sweep_all.sh <build dir> > sweeps.log
+B="$1"; W="$B/work"; mkdir -p "$W"
+P="python -I $(dirname "$0")/sweep.py $B/Release/wm2gen.exe $B/Release/weakmodes2-helper.exe"
+Q="CQ K1ABC FN42"; F="K1ABC FN42 37"
+$P fst4 60 - "$Q" -22 -29 -1 10 "$W"
+$P fst4w 120 - "$F" -26 -34 -1 10 "$W"
+$P q65 60 A "$Q" -22 -30 -1 10 "$W"
+$P fst4 15 - "$Q" -15 -23 -1 10 "$W"
+$P fst4 30 - "$Q" -19 -27 -1 10 "$W"
+$P fst4 120 - "$Q" -26 -34 -1 8 "$W"
+$P q65 15 A "$Q" -17 -25 -1 10 "$W"
+$P q65 30 A "$Q" -19 -27 -1 10 "$W"
+$P q65 120 A "$Q" -25 -33 -1 8 "$W"
+$P fst4 300 - "$Q" -30 -38 -1 5 "$W"
+$P fst4w 300 - "$F" -31 -39 -1 5 "$W"
+$P q65 300 A "$Q" -28 -36 -1 5 "$W"

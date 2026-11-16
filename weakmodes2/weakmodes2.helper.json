@@ -1,0 +1,30 @@
+{
+  "name": "weakmodes2",
+  "version": "0.1.0",
+  "licence": "GPL-3.0-or-later",
+  "source": "https://github.com/adswill/OnAir",
+  "upstream": "OnAir e118396b25d5 (FST4, FST4W, Q65 after WSJT-X b4f9a431bcf6)",
+  "executable": "weakmodes2-helper.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32"],
+  "rate": 12000,
+  "rate_min": 8000,
+  "rate_max": 192000,
+  "options": {
+    "--decoders": "comma list of mode:period, default fst4:60,fst4w:120,q65:60A",
+    "--fmin": "lowest audio frequency searched, Hz (200)",
+    "--fmax": "highest audio frequency searched, Hz (3000)",
+    "--dt-min": "earliest start offset, s (-2.5)",
+    "--dt-max": "latest start offset, s (2.5)",
+    "--slot-offset": "seconds already elapsed in the slot at the first sample (0)",
+    "--start-utc": "UTC epoch seconds of the first sample; slots follow the UTC clock"
+  },
+  "events": {
+    "decode": ["mode", "sub", "period", "slot", "utc", "freq", "snr", "dt", "dbm", "call", "grid", "partial", "text"],
+    "status": ["text"],
+    "stats": ["samples", "slots_decoded", "decodes"]
+  },
+  "reserved_field": "text",
+  "attribution": "Based on OnAir by Kristijonas Adomaitis - https://on-air.dev"
+}
