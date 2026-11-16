@@ -1,0 +1,2 @@
+{"helper":"mdc","version":"1.0.0","protocol":1,"licence":"GPL-2.0-only","source":"https://github.com/atmatthewat/mdc-encode-decode","upstream":"mdc-encode-decode 45fc9095fbde (MDC-1200); fsync-mdc1200-decode 287356a99d4 (Fleetsync I)","format":"s16","rate":16000,"decoders":["mdc1200","fleetsync1"]}
+{"t":0.2812,"type":"stats","samples":4500,"mdc1200":0,"mdc1200_double":0,"mdc1200_ecc_corrected":0,"mdc1200_crc_fail":0,"fleetsync1":0,"fleetsync2_ignored":0}

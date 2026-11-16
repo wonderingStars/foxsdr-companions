@@ -1,0 +1,8 @@
+{"helper":"mdc","version":"1.0.0","protocol":1,"licence":"GPL-2.0-only","source":"https://github.com/atmatthewat/mdc-encode-decode","upstream":"mdc-encode-decode 45fc9095fbde (MDC-1200); fsync-mdc1200-decode 287356a99d4 (Fleetsync I)","format":"s16","rate":48000,"decoders":["mdc1200","fleetsync1"]}
+{"t":0.3734,"type":"mdc1200","frames":1,"op":1,"op_hex":"01","arg":128,"arg_hex":"80","unit":"1234","ecc_bits":1,"crc_ok":true}
+{"t":0.7972,"type":"mdc1200","frames":1,"op":1,"op_hex":"01","arg":0,"arg_hex":"00","unit":"1234","ecc_bits":0,"crc_ok":true}
+{"t":1.2205,"type":"mdc1200","frames":1,"op":0,"op_hex":"00","arg":128,"arg_hex":"80","unit":"0042","ecc_bits":0,"crc_ok":true}
+{"t":1.6433,"type":"mdc1200","frames":1,"op":99,"op_hex":"63","arg":133,"arg_hex":"85","unit":"00FF","ecc_bits":3,"crc_ok":true}
+{"t":2.0666,"type":"mdc1200","frames":1,"op":126,"op_hex":"7E","arg":85,"arg_hex":"55","unit":"FFFF","ecc_bits":1,"crc_ok":true}
+{"t":2.5836,"type":"mdc1200","frames":2,"op":53,"op_hex":"35","arg":137,"arg_hex":"89","unit":"4321","op2":131,"op2_hex":"83","arg2":13,"arg2_hex":"0D","unit2":"1234","ecc_bits":0,"crc_ok":true}
+{"t":2.8335,"type":"stats","samples":136006,"mdc1200":6,"mdc1200_double":1,"mdc1200_ecc_corrected":3,"mdc1200_crc_fail":0,"fleetsync1":0,"fleetsync2_ignored":0}

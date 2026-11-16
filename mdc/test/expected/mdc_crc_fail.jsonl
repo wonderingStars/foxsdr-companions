@@ -1,0 +1,5 @@
+{"helper":"mdc","version":"1.0.0","protocol":1,"licence":"GPL-2.0-only","source":"https://github.com/atmatthewat/mdc-encode-decode","upstream":"mdc-encode-decode 45fc9095fbde (MDC-1200); fsync-mdc1200-decode 287356a99d4 (Fleetsync I)","format":"s16","rate":48000,"decoders":["mdc1200","fleetsync1"]}
+{"t":0.3734,"type":"mdc1200","frames":1,"op":1,"op_hex":"01","arg":128,"arg_hex":"80","unit":"1234","ecc_bits":0,"crc_ok":true}
+{"t":0.8472,"type":"mdc1200_crc_fail","frame":1,"crc_ok":false}
+{"t":1.3199,"type":"mdc1200","frames":1,"op":1,"op_hex":"01","arg":0,"arg_hex":"00","unit":"1234","ecc_bits":0,"crc_ok":true}
+{"t":1.6201,"type":"stats","samples":77763,"mdc1200":2,"mdc1200_double":0,"mdc1200_ecc_corrected":0,"mdc1200_crc_fail":1,"fleetsync1":0,"fleetsync2_ignored":0}

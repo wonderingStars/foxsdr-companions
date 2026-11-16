@@ -1,0 +1,22 @@
+{
+  "name": "mdc",
+  "version": "1.0.0",
+  "licence": "GPL-2.0-only",
+  "source": "https://github.com/atmatthewat/mdc-encode-decode",
+  "upstream": "mdc-encode-decode 45fc9095fbde (MDC-1200); fsync-mdc1200-decode 287356a99d4 (Fleetsync I)",
+  "description": "MDC-1200 (1200 baud MSK on analogue FM voice channels) and Fleetsync I signalling decoders, receive only",
+  "executable": "mdc-helper.exe",
+  "protocol": 1,
+  "input": "audio",
+  "format": "s16",
+  "formats": ["s16", "f32"],
+  "rate": { "recommended": 48000, "min": 8000, "max": 96000 },
+  "args": ["--hide-ids", "--no-mdc", "--no-fleetsync", "--report-bad"],
+  "events": {
+    "mdc1200": ["frames", "op", "op_hex", "arg", "arg_hex", "unit", "op2", "op2_hex", "arg2", "arg2_hex", "unit2", "ecc_bits", "crc_ok"],
+    "mdc1200_crc_fail": ["frame", "crc_ok"],
+    "fleetsync1": ["cmd", "subcmd", "from_fleet", "from_unit", "to_fleet", "to_unit", "all_call", "baud", "raw", "payload", "crc_ok"],
+    "stats": ["samples", "mdc1200", "mdc1200_double", "mdc1200_ecc_corrected", "mdc1200_crc_fail", "fleetsync1", "fleetsync2_ignored"]
+  },
+  "reserved_field": "text"
+}

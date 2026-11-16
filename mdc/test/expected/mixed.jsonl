@@ -1,0 +1,11 @@
+{"helper":"mdc","version":"1.0.0","protocol":1,"licence":"GPL-2.0-only","source":"https://github.com/atmatthewat/mdc-encode-decode","upstream":"mdc-encode-decode 45fc9095fbde (MDC-1200); fsync-mdc1200-decode 287356a99d4 (Fleetsync I)","format":"s16","rate":16000,"decoders":["mdc1200","fleetsync1"]}
+{"t":0.3400,"type":"fleetsync1","cmd":64,"subcmd":0,"from_fleet":123,"from_unit":4567,"to_fleet":123,"to_unit":2345,"all_call":false,"baud":1200,"raw":"004018DF0542","crc_ok":true}
+{"t":1.0200,"type":"fleetsync1","cmd":66,"subcmd":0,"from_fleet":100,"from_unit":1000,"to_fleet":100,"to_unit":2000,"all_call":false,"baud":1200,"raw":"0043010013E9010000000500004F4C4C4548000000000000","payload":"HELLO","crc_ok":true}
+{"t":1.7533,"type":"fleetsync1","cmd":66,"subcmd":0,"from_fleet":321,"from_unit":1500,"to_fleet":321,"to_unit":1600,"all_call":false,"baud":1200,"raw":"0043DE1F5259DE0000000B00737574617453006B6F203720","payload":"Status 7 ok","crc_ok":true}
+{"t":3.0268,"type":"mdc1200","frames":1,"op":1,"op_hex":"01","arg":128,"arg_hex":"80","unit":"1234","ecc_bits":0,"crc_ok":true}
+{"t":3.4501,"type":"mdc1200","frames":1,"op":1,"op_hex":"01","arg":0,"arg_hex":"00","unit":"1234","ecc_bits":0,"crc_ok":true}
+{"t":3.8739,"type":"mdc1200","frames":1,"op":0,"op_hex":"00","arg":128,"arg_hex":"80","unit":"0042","ecc_bits":0,"crc_ok":true}
+{"t":4.2966,"type":"mdc1200","frames":1,"op":99,"op_hex":"63","arg":133,"arg_hex":"85","unit":"00FF","ecc_bits":3,"crc_ok":true}
+{"t":4.7203,"type":"mdc1200","frames":1,"op":126,"op_hex":"7E","arg":85,"arg_hex":"55","unit":"FFFF","ecc_bits":2,"crc_ok":true}
+{"t":5.2370,"type":"mdc1200","frames":2,"op":53,"op_hex":"35","arg":137,"arg_hex":"89","unit":"4321","op2":131,"op2_hex":"83","arg2":13,"arg2_hex":"0D","unit2":"1234","ecc_bits":0,"crc_ok":true}
+{"t":5.4869,"type":"stats","samples":87790,"mdc1200":6,"mdc1200_double":1,"mdc1200_ecc_corrected":2,"mdc1200_crc_fail":0,"fleetsync1":3,"fleetsync2_ignored":0}
