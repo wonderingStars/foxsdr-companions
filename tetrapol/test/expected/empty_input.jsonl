@@ -1,0 +1,2 @@
+{"helper":"tetrapol","version":"0.1.0","protocol":1,"licence":"GPL-2.0-only","source":"https://github.com/airphel/tetrapol-kit-2023","upstream":"tetrapol-kit-2023 09def9d","format":"bits","rate":8000,"channel":"cch","band":"uhf","direction":"down","hide_ids":false}
+{"t":0.0000,"type":"stats","bits":0,"frames_ok":0,"frames_bad":0,"frames_corrected":0,"messages":0,"messages_data_not_decoded":0,"messages_unknown":0,"traffic_frames_not_decoded":0,"sync_found":0,"sync_lost":0,"lines_dropped":0}

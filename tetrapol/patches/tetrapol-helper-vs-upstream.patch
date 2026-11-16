@@ -1,0 +1,914 @@
+diff --git a/tetrapol/upstream/cch.c b/tetrapol/upstream/cch.c
+index 1d6ded7..8c94c6a 100644
+--- a/tetrapol/upstream/cch.c
++++ b/tetrapol/upstream/cch.c
+@@ -103,8 +103,7 @@ int cch_push_frame(cch_t *cch, const frame_t *fr)
+ 
+     if (fn_mod == 98 || fn_mod == 99) {
+         if (pch_push_frame(cch->pch, fr)) {
+-            LOG_IF(INFO) {
+-                LOG_("\n");
++            {   /* FoxSDR helper: always reported, as JSON */
+                 pch_print(cch->pch);
+             }
+         }
+@@ -113,8 +112,7 @@ int cch_push_frame(cch_t *cch, const frame_t *fr)
+     if (cch->cch_mux_type == CELL_CONFIG_MUX_TYPE_TYPE_2) {
+         if (fn_mod == 48 || fn_mod == 49) {
+             if (pch_push_frame(cch->pch, fr)) {
+-                LOG_IF(INFO) {
+-                    LOG_("\n");
++                {   /* FoxSDR helper: always reported, as JSON */
+                     pch_print(cch->pch);
+                 }
+             }
+@@ -124,8 +122,7 @@ int cch_push_frame(cch_t *cch, const frame_t *fr)
+ 
+     if (fn_mod % 25 == 14) {
+         if (rch_push_frame(cch->rch, fr)) {
+-            LOG_IF(INFO) {
+-                LOG_("\n");
++            {   /* FoxSDR helper: always reported, as JSON */
+                 rch_print(cch->rch);
+             }
+         }
+diff --git a/tetrapol/upstream/frame.c b/tetrapol/upstream/frame.c
+index c471c8d..659b9e3 100644
+--- a/tetrapol/upstream/frame.c
++++ b/tetrapol/upstream/frame.c
+@@ -620,7 +620,9 @@ static void frame_encode1(uint8_t *out_bytes, const uint8_t *in_bits)
+     // drop one bit copy from data_1
+     data_1 &= 0x5555555555555555LL;
+ 
+-    *(uint64_t *)out_bytes = htole64(data ^ data_1 ^ data_2);
++    /* FoxSDR helper change (encoder only, the helper never calls it): data_2 = data << 4 spills 4 bits above bit 52 into
++       the first bits of the second block, which is ORed into the same word by frame_encode2(); mask them off. */
++    *(uint64_t *)out_bytes = htole64((data ^ data_1 ^ data_2) & ((1ULL << (2 * 26)) - 1));
+ }
+ 
+ /**
+diff --git a/tetrapol/upstream/link.c b/tetrapol/upstream/link.c
+index be23559..e4f39e9 100644
+--- a/tetrapol/upstream/link.c
++++ b/tetrapol/upstream/link.c
+@@ -2,10 +2,9 @@
+ 
+ #include <tetrapol/link.h>
+ #include <tetrapol/log.h>
+-#include <tetrapol/lsdu_cd.h>
++#include <tetrapol/helper_out.h>
+ #include <tetrapol/misc.h>
+ #include <tetrapol/tpdu.h>
+-#include <tetrapol/lsdu_vch.h>
+ 
+ #include <stdlib.h>
+ #include <string.h>
+@@ -16,6 +15,7 @@ struct link_priv_t {
+     uint8_t v_r;    ///< v(r) PAS 0001-3-3 7.5.4.2.2
+     uint8_t v_s;    ///< v(s) PAS 0001-3-3 7.5.4.2.2
+     bool rx_glitch;
++    tpol_t *tpol;   /* FoxSDR helper: needed to time-stamp "not decoded" reports */
+ };
+ 
+ link_t *link_create(tpol_t *tpol, int log_ch)
+@@ -41,6 +41,7 @@ link_t *link_create(tpol_t *tpol, int log_ch)
+     link->v_r = 0;
+     link->v_s = 0;
+     link->rx_glitch = true;
++    link->tpol = tpol;
+ 
+     return link;
+ }
+@@ -115,7 +116,7 @@ int link_push_hdlc_frame(link_t *link, const hdlc_frame_t *hdlc_fr)
+         }
+ 
+         if (!cmpzero(hdlc_fr->data, hdlc_fr->nbits / 8)) {
+-            char buf[hdlc_fr->nbits / 8 * 3];
++            char buf[SYS_PAR_N200_BYTES_MAX * 3 + 1];
+             LOG(WTF, "cmd=0x%02x, nonzero stuffing: %s\n",
+                     hdlc_fr->command.cmd,
+                     sprint_hex(buf, hdlc_fr->data, hdlc_fr->nbits / 8));
+@@ -126,7 +127,7 @@ int link_push_hdlc_frame(link_t *link, const hdlc_frame_t *hdlc_fr)
+ 
+     if (hdlc_fr->command.cmd == COMMAND_UNNUMBERED_UI) {
+         LOG_IF(DBG) {
+-            char buf[hdlc_fr->nbits / 8 * 3];
++            char buf[SYS_PAR_N200_BYTES_MAX * 3 + 1];
+             char addr_buf[ADDR_PRINT_BUF_SIZE];
+             LOG(DBG, "cmd=UI %s data=%s\n",
+                     addr_print(addr_buf, &hdlc_fr->addr),
+@@ -142,7 +143,7 @@ int link_push_hdlc_frame(link_t *link, const hdlc_frame_t *hdlc_fr)
+         }
+         if (!cmpzero(hdlc_fr->data, hdlc_fr->nbits / 8)) {
+             LOG_IF(WTF) {
+-                char buf[hdlc_fr->nbits / 8 * 3];
++                char buf[SYS_PAR_N200_BYTES_MAX * 3 + 1];
+                 LOG(WTF, "cmd=ACK_DACH, nonzero stuffing: %s",
+                         sprint_hex(buf, hdlc_fr->data, hdlc_fr->nbits / 8));
+             }
+@@ -165,7 +166,7 @@ int link_push_hdlc_frame(link_t *link, const hdlc_frame_t *hdlc_fr)
+ 
+         if (!cmpzero(hdlc_fr->data, hdlc_fr->nbits / 8)) {
+             LOG_IF(WTF) {
+-                char buf[hdlc_fr->nbits / 8 * 3];
++                char buf[SYS_PAR_N200_BYTES_MAX * 3 + 1];
+                 LOG(WTF, "cmd=SNRM, nonzero stuffing: %s",
+                         sprint_hex(buf, hdlc_fr->data, hdlc_fr->nbits / 8));
+             }
+@@ -174,40 +175,12 @@ int link_push_hdlc_frame(link_t *link, const hdlc_frame_t *hdlc_fr)
+         return 0;
+     }
+ 
+-    if (hdlc_fr->command.cmd == COMMAND_UNNUMBERED_UI_VCH) {
+-        LOG_IF(DBG) {
+-            char buf[hdlc_fr->nbits / 8 * 3];
+-            char addr_buf[ADDR_PRINT_BUF_SIZE];
+-            LOG(DBG, "cmd=UI_VCH %s data=%s",
+-                    addr_print(addr_buf, &hdlc_fr->addr),
+-                    sprint_hex(buf, hdlc_fr->data, hdlc_fr->nbits / 8));
+-        }
+-
+-        lsdu_vch_t *lsdu;
+-        if (!lsdu_vch_decode_hdlc_frame(hdlc_fr, &lsdu)) {
+-            // LSDU should be send upwards like TSDU
+-            lsdu_vch_print(lsdu);
+-            lsdu_vch_destroy(lsdu);
+-        }
+-
+-        return 0;
+-    }
+-
+-    if (hdlc_fr->command.cmd == COMMAND_UNNUMBERED_UI_CD) {
+-        LOG_IF(DBG) {
+-            char buf[hdlc_fr->nbits / 8 * 3];
+-            char addr_buf[ADDR_PRINT_BUF_SIZE];
+-            LOG(DBG, "cmd=UI_CD %s data=%s",
+-                    addr_print(addr_buf, &hdlc_fr->addr),
+-                    sprint_hex(buf, hdlc_fr->data, hdlc_fr->nbits / 8));
+-        }
+-
+-        lsdu_cd_t *lsdu;
+-        if (!lsdu_cd_decode(hdlc_fr->data, hdlc_fr->nbits / 8, &lsdu)) {
+-            // LSDU should be send upwards like TSDU
+-            lsdu_cd_print(lsdu);
+-            lsdu_cd_destroy(lsdu);
+-        }
++    /* FoxSDR helper: UI_VCH (voice channel signalling) and UI_CD (circuit data) frames carry traffic, not
++       control-channel signalling; they are reported as "not decoded" and their content is never parsed. */
++    if (hdlc_fr->command.cmd == COMMAND_UNNUMBERED_UI_VCH ||
++            hdlc_fr->command.cmd == COMMAND_UNNUMBERED_UI_CD) {
++        tp_emit_not_decoded(link->tpol, hdlc_fr->command.cmd == COMMAND_UNNUMBERED_UI_VCH ?
++                "voice-channel frame" : "circuit-data frame");
+         return 0;
+     }
+ 
+diff --git a/tetrapol/upstream/msg_coding.c b/tetrapol/upstream/msg_coding.c
+index 05c13d3..6437272 100644
+--- a/tetrapol/upstream/msg_coding.c
++++ b/tetrapol/upstream/msg_coding.c
+@@ -91,12 +91,50 @@ void address_print(const address_t *address)
+     }
+ }
+ 
+-int address_list_decode(address_list_t **ptr_addrs, const uint8_t *data)
++/*
++ * FoxSDR helper change: upstream looped "while (address_decode(...))" with no length limit. An address with an
++ * unsupported CNA does not advance the data pointer, so a damaged or hostile message kept the loop (and the realloc
++ * behind it) running for ever. The list is now limited to the bytes available and to ADDRESS_LIST_MAX entries.
++ */
++enum {
++    ADDRESS_LIST_MAX = 8,
++};
++
++/** bytes taken by the address at data (PAS 0001-3-2 5.3.4), -1 if unsupported or not completely inside avail */
++static int address_size(const uint8_t *data, int avail)
++{
++    if (avail < 1) {
++        return -1;
++    }
++    int n;
++    switch (get_bits(3, data, 1)) {
++        case ADDRESS_CNA_NOT_SIGNIFICANT:
++            n = 1;
++            break;
++        case ADDRESS_CNA_RFSI:
++            n = 5;
++            break;
++        case ADDRESS_CNA_PABX:
++            n = 1 + ((int)get_bits(4, data, 4) + 1) / 2;
++            break;
++        default:
++            return -1;
++    }
++    return n <= avail ? n : -1;
++}
++
++int address_list_decode(address_list_t **ptr_addrs, const uint8_t *data, int len)
+ {
+-    // TODO: check len
+     address_list_t *addrs = *ptr_addrs;
++    bool more;
+     do {
+         const int n = addrs ? (addrs->nadrs + 1) : 1;
++        const int sz = address_size(data, len);
++        if (n > ADDRESS_LIST_MAX || sz < 0) {
++            LOG(ERR, "address list: unsupported or truncated address");
++            *ptr_addrs = addrs;
++            return addrs ? 0 : -1;
++        }
+         const int l = sizeof(address_list_t) + n * sizeof(address_t);
+         address_list_t *p = realloc(addrs, l);
+         if (!p) {
+@@ -105,10 +143,11 @@ int address_list_decode(address_list_t **ptr_addrs, const uint8_t *data)
+         }
+         addrs = p;
+         addrs->nadrs = n;
+-    } while (address_decode(&addrs->called_adr[addrs->nadrs-1], &data));
++        more = address_decode(&addrs->called_adr[addrs->nadrs-1], &data);
++        len -= sz;
++    } while (more);
+ 
+     *ptr_addrs = addrs;
+ 
+     return 0;
+ }
+-
+diff --git a/tetrapol/upstream/pch.c b/tetrapol/upstream/pch.c
+index b1c3130..a0510d3 100644
+--- a/tetrapol/upstream/pch.c
++++ b/tetrapol/upstream/pch.c
+@@ -4,6 +4,7 @@
+ #include <tetrapol/addr.h>
+ #include <tetrapol/misc.h>
+ #include <tetrapol/data_frame.h>
++#include <tetrapol/helper_out.h>
+ 
+ #include <stdlib.h>
+ #include <string.h>
+@@ -88,15 +89,12 @@ bool pch_push_frame(pch_t *pch, const frame_t *fr)
+     return true;
+ }
+ 
++/* FoxSDR helper: upstream printed this as text on stderr; the helper reports it as a JSON event instead
++   (tp_emit_pch in helper_out.c). The activation bitmap is a bit set of paged terminal slots, not an identity. */
+ void pch_print(pch_t *pch)
+ {
+-    char buf[ARRAY_LEN(pch->pch_data.act_bitmap) * 3];
+-    LOGF("PCH: activation_bitmap=%s\n",
+-            sprint_hex(buf, pch->pch_data.act_bitmap,
+-                ARRAY_LEN(pch->pch_data.act_bitmap)));
+-    for (int i = 0; i < pch->pch_data.naddrs; ++i) {
+-        LOGF("\taddr %d: %s\n", i, addr_print(buf, &pch->pch_data.addrs[i]));
+-    }
++    tp_emit_pch(pch->tpol, pch->pch_data.act_bitmap, ARRAY_LEN(pch->pch_data.act_bitmap),
++            pch->pch_data.addrs, pch->pch_data.naddrs);
+ }
+ 
+ // TODO: Add tick method and report pagging of stations. When stations is in
+diff --git a/tetrapol/upstream/phys_ch.c b/tetrapol/upstream/phys_ch.c
+index e4801ae..1fa3096 100644
+--- a/tetrapol/upstream/phys_ch.c
++++ b/tetrapol/upstream/phys_ch.c
+@@ -2,7 +2,7 @@
+ 
+ #include <tetrapol/tetrapol_int.h>
+ #include <tetrapol/log.h>
+-#include <tetrapol/frame_json.h>
++#include <tetrapol/helper_out.h>   /* FoxSDR helper: JSON Lines output instead of upstream frame_json */
+ #include <tetrapol/system_config.h>
+ #include <tetrapol/tsdu.h>
+ #include <tetrapol/misc.h>
+@@ -10,13 +10,11 @@
+ #include <tetrapol/tp_timer.h>
+ #include <tetrapol/frame.h>
+ #include <tetrapol/cch.h>
+-#include <tetrapol/tch.h>
+ 
+ #include <limits.h>
+ #include <stdlib.h>
+ #include <stdbool.h>
+ #include <string.h>
+-#include <unistd.h>
+ 
+ // max error rate for 2 frame synchronization sequences
+ #define MAX_FRAME_SYNC_ERR 1
+@@ -41,7 +39,6 @@ struct phys_ch_priv_t {
+     // CCH specific data, will be union with traffich CH specicic data
+     tp_timer_t *tp_timer;
+     cch_t *cch;
+-    tch_t *tch;
+     tpol_t *tpol;
+ };
+ 
+@@ -83,12 +80,9 @@ phys_ch_t *tetrapol_phys_ch_create(tetrapol_t *tetrapol)
+         }
+     }
+ 
++    /* FoxSDR helper: traffic channels are synchronised and counted but never decoded (no voice, no data) */
+     if (cfg->radio_ch_type == TETRAPOL_RADIO_TCH) {
+-        phys_ch->tch = tch_create(phys_ch->tpol);
+-        if (phys_ch->tch) {
+-            tp_timer_register(phys_ch->tp_timer, tch_tick, phys_ch->tch);
+-            return phys_ch;
+-        }
++        return phys_ch;
+     }
+ 
+     frame_decoder_destroy(phys_ch->fd);
+@@ -103,9 +97,6 @@ void tetrapol_phys_ch_destroy(phys_ch_t *phys_ch)
+     if (phys_ch->radio_ch_type == TETRAPOL_RADIO_CCH) {
+         cch_destroy(phys_ch->cch);
+     }
+-    if (phys_ch->radio_ch_type == TETRAPOL_RADIO_TCH) {
+-        tch_destroy(phys_ch->tch);
+-    }
+     frame_decoder_destroy(phys_ch->fd);
+     tp_timer_destroy(phys_ch->tp_timer);
+     free(phys_ch);
+@@ -314,6 +305,7 @@ int tetrapol_phys_ch_process(phys_ch_t *phys_ch)
+             return 0;
+         }
+         LOG(INFO, "Frame sync found");
++        tp_emit_sync(phys_ch->tpol, 1);
+         phys_ch->tpol->frame_no = FRAME_NO_UNKNOWN;
+         if (phys_ch->cch) {
+             cch_fr_error(phys_ch->cch);
+@@ -335,6 +327,7 @@ int tetrapol_phys_ch_process(phys_ch_t *phys_ch)
+     }
+ 
+     LOG(INFO, "Frame sync lost");
++    tp_emit_sync(phys_ch->tpol, 0);
+     phys_ch->has_frame_sync = false;
+ 
+     return 0;
+@@ -394,7 +387,7 @@ static int process_frame(phys_ch_t *phys_ch, const uint8_t *fr_data)
+         phys_ch->scr_guess : phys_ch->scr;
+ 
+     if (phys_ch->scr_last != scr) {
+-        printf("{ \"event\": \"scr\", \"scr\": %d }\n", scr);
++        tp_emit_scr(phys_ch->tpol, scr);
+         phys_ch-> scr_last = scr;
+     }
+ 
+@@ -405,8 +398,8 @@ static int process_frame(phys_ch_t *phys_ch, const uint8_t *fr_data)
+     frame_decoder_reset(phys_ch->fd, phys_ch->band, scr, fr_type);
+     frame_decoder_decode(phys_ch->fd, &fr, fr_data);
+ 
+-    if (!fr.broken) {
+-        frame_json(phys_ch->tpol, &fr);
++    if (phys_ch->radio_ch_type == TETRAPOL_RADIO_CCH) {
++        tp_emit_frame(phys_ch->tpol, &fr);   /* counts every frame, prints the good ones (and bad ones on request) */
+     }
+ 
+     if (phys_ch->radio_ch_type == TETRAPOL_RADIO_CCH) {
+@@ -414,7 +407,10 @@ static int process_frame(phys_ch_t *phys_ch, const uint8_t *fr_data)
+         return cch_push_frame(phys_ch->cch, &fr);
+     }
+ 
+-    if (!tch_push_frame(phys_ch->tch, &fr)) {
++    /* FoxSDR helper: replaces tch_push_frame(); the frame content is dropped here, only "a traffic frame
++       arrived" is reported. A broken frame (-1 in upstream) falls through to the SCR re-detection below. */
++    if (!fr.broken) {
++        tp_emit_traffic(phys_ch->tpol, &fr);
+         return 0;
+     }
+ 
+diff --git a/tetrapol/upstream/rch.c b/tetrapol/upstream/rch.c
+index 0269475..a059b93 100644
+--- a/tetrapol/upstream/rch.c
++++ b/tetrapol/upstream/rch.c
+@@ -4,6 +4,7 @@
+ #include <tetrapol/addr.h>
+ #include <tetrapol/bit_utils.h>
+ #include <tetrapol/data_frame.h>
++#include <tetrapol/helper_out.h>
+ #include <tetrapol/misc.h>
+ #include <tetrapol/system_config.h>
+ 
+@@ -17,6 +18,7 @@ typedef struct {
+ struct rch_priv_t {
+     data_frame_t *data_fr;
+     rch_data_t rch_data;
++    tpol_t *tpol;   /* FoxSDR helper: for time-stamping the reported event */
+ };
+ 
+ rch_t *rch_create(tpol_t *tpol)
+@@ -32,6 +34,8 @@ rch_t *rch_create(tpol_t *tpol)
+         return NULL;
+     }
+ 
++    rch->tpol = tpol;
++
+     return rch;
+ }
+ 
+@@ -78,23 +82,9 @@ bool rch_push_frame(rch_t *rch, const frame_t *fr)
+     return true;
+ }
+ 
++/* FoxSDR helper: upstream printed this as text on stderr; the helper reports it as a JSON event instead
++   (tp_emit_rch in helper_out.c). */
+ void rch_print(const rch_t *rch)
+ {
+-    LOGF("RCH ACKs (%d):\n", rch->rch_data.naddrs);
+-    for (int i = 0; i < rch->rch_data.naddrs; ++i) {
+-        const addr_t *addr = &rch->rch_data.addrs[i];
+-        if (!addr->z) {
+-            char buf[ADDR_PRINT_BUF_SIZE];
+-            LOGF("\tADDR ACK: %s\n", addr_print(buf, addr));
+-        } else {
+-            LOGF("\tNACK: ");
+-            if (addr->y == 4) {
+-                LOGF("noise\n");
+-            } else if (addr->y == 5) {
+-                LOGF("collision\n");
+-            } else {
+-                LOGF("WTF unknown\n");
+-            }
+-        }
+-    }
++    tp_emit_rch(rch->tpol, rch->rch_data.addrs, rch->rch_data.naddrs);
+ }
+diff --git a/tetrapol/upstream/terminal.c b/tetrapol/upstream/terminal.c
+index 6e93c60..0b5424c 100644
+--- a/tetrapol/upstream/terminal.c
++++ b/tetrapol/upstream/terminal.c
+@@ -6,14 +6,30 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
+-#include <glib.h>
++/*
++ * FoxSDR helper change: upstream keeps the terminals in a glib GTree. glib is not available here, so the
++ * terminal list is a small array searched linearly, capped at TERMINAL_LIST_MAX entries (every terminal owns
++ * about 30 kB of reassembly buffers). When the list is full the least recently used terminal is dropped.
++ * Behaviour for up to TERMINAL_LIST_MAX terminals is the same as upstream.
++ */
++enum {
++    TERMINAL_LIST_MAX = 512,
++};
+ 
+ struct terminal_priv_t {
+     link_t *link;
+ };
+ 
++typedef struct {
++    addr_t addr;
++    terminal_t *term;
++    uint64_t last_use;
++} terminal_entry_t;
++
+ struct terminal_list_priv_t {
+-    GTree *tree;
++    terminal_entry_t *entries;
++    int n;
++    uint64_t use_counter;
+     tpol_t *tpol;
+     int log_ch;
+ };
+@@ -44,44 +60,25 @@ static void terminal_destroy(terminal_t *term)
+     free(term);
+ }
+ 
+-static inline void terminal_destroy_(gpointer term)
+-{
+-    terminal_destroy(term);
+-}
+-
+ int terminal_push_hdlc_frame(terminal_t* term, const hdlc_frame_t *hdlc_fr)
+ {
+     return link_push_hdlc_frame(term->link, hdlc_fr);
+ }
+ 
+-static inline void addr_free(gpointer data)
++static bool addr_equal(const addr_t *a1, const addr_t *a2)
+ {
+-    free(data);
+-}
+-
+-static gint addr_cmp(gconstpointer _a1, gconstpointer _a2, gpointer user_data)
+-{
+-    const addr_t *a1 = _a1;
+-    const addr_t *a2 = _a2;
+-
+-    if (a1->z != a2->z) {
+-        return a2->z - a1->z;
+-    }
+-    if (a1->y != a2->y) {
+-        return a2->y - a1->y;
+-    }
+-    return a2->x - a1->x;
++    return a1->z == a2->z && a1->y == a2->y && a1->x == a2->x;
+ }
+ 
+ terminal_list_t *terminal_list_create(tpol_t * tpol, int log_ch)
+ {
+-    terminal_list_t *tlist = malloc(sizeof(terminal_list_t));
++    terminal_list_t *tlist = calloc(1, sizeof(terminal_list_t));
+     if (!tlist) {
+         return NULL;
+     }
+ 
+-    tlist->tree = g_tree_new_full(addr_cmp, NULL, addr_free, terminal_destroy_);
+-    if (!tlist->tree) {
++    tlist->entries = calloc(TERMINAL_LIST_MAX, sizeof(terminal_entry_t));
++    if (!tlist->entries) {
+         free(tlist);
+         return NULL;
+     }
+@@ -94,44 +91,84 @@ terminal_list_t *terminal_list_create(tpol_t * tpol, int log_ch)
+ 
+ void terminal_list_destroy(terminal_list_t *tlist)
+ {
+-    g_tree_destroy(tlist->tree);
++    if (!tlist) {
++        return;
++    }
++    for (int i = 0; i < tlist->n; ++i) {
++        terminal_destroy(tlist->entries[i].term);
++    }
++    free(tlist->entries);
+     free(tlist);
+ }
+ 
++static terminal_entry_t *terminal_list_find(const terminal_list_t* tlist, const addr_t *addr)
++{
++    for (int i = 0; i < tlist->n; ++i) {
++        if (addr_equal(&tlist->entries[i].addr, addr)) {
++            return &tlist->entries[i];
++        }
++    }
++    return NULL;
++}
++
+ terminal_t* terminal_list_lookup(const terminal_list_t* tlist, const addr_t *addr)
+ {
+-    return g_tree_lookup(tlist->tree, addr);
++    terminal_entry_t *e = terminal_list_find(tlist, addr);
++    return e ? e->term : NULL;
+ }
+ 
+ terminal_t* terminal_list_insert(terminal_list_t* tlist, const addr_t *addr)
+ {
++    terminal_entry_t *e = terminal_list_find(tlist, addr);
++    if (e) {
++        return e->term;
++    }
++
+     terminal_t *term = terminal_create(tlist->tpol, tlist->log_ch);
+     if (!term) {
+         return NULL;
+     }
+ 
+-    addr_t *addr_new = malloc(sizeof(addr_t));
+-    if (!addr_new) {
+-        terminal_destroy(term);
+-        return NULL;
++    if (tlist->n == TERMINAL_LIST_MAX) {
++        int oldest = 0;
++        for (int i = 1; i < tlist->n; ++i) {
++            if (tlist->entries[i].last_use < tlist->entries[oldest].last_use) {
++                oldest = i;
++            }
++        }
++        terminal_destroy(tlist->entries[oldest].term);
++        tlist->entries[oldest] = tlist->entries[tlist->n - 1];
++        --tlist->n;
+     }
+-    memcpy(addr_new, addr, sizeof(addr_t));
+ 
+-    g_tree_insert(tlist->tree, addr_new, term);
++    e = &tlist->entries[tlist->n++];
++    e->addr = *addr;
++    e->term = term;
++    e->last_use = ++tlist->use_counter;
+ 
+     return term;
+ }
+ 
+ void terminal_list_erase(terminal_list_t* tlist, const addr_t *addr)
+ {
+-    g_tree_remove(tlist->tree, addr);
++    terminal_entry_t *e = terminal_list_find(tlist, addr);
++    if (!e) {
++        return;
++    }
++    terminal_destroy(e->term);
++    *e = tlist->entries[tlist->n - 1];
++    --tlist->n;
+ }
+ 
+ int terminal_list_push_hdlc_frame(terminal_list_t* tlist,
+         const hdlc_frame_t *hdlc_fr)
+ {
+-    terminal_t *term = terminal_list_lookup(tlist, &hdlc_fr->addr);
+-    if (!term) {
++    terminal_entry_t *e = terminal_list_find(tlist, &hdlc_fr->addr);
++    terminal_t *term;
++    if (e) {
++        term = e->term;
++        e->last_use = ++tlist->use_counter;
++    } else {
+         term = terminal_list_insert(tlist, &hdlc_fr->addr);
+         if (!term) {
+             LOG(ERR, "Terminal allocation failed");
+@@ -142,34 +179,16 @@ int terminal_list_push_hdlc_frame(terminal_list_t* tlist,
+     return terminal_push_hdlc_frame(term, hdlc_fr);
+ }
+ 
+-static gboolean terminal_rx_glitch(gpointer key, gpointer value,
+-        gpointer data)
+-{
+-    terminal_t *term = value;
+-
+-    link_rx_glitch(term->link);
+-
+-    return false;
+-}
+-
+ void terminal_list_rx_glitch(terminal_list_t* tlist)
+ {
+-    g_tree_foreach(tlist->tree, terminal_rx_glitch, NULL);
+-}
+-
+-static gboolean terminal_tick(gpointer key, gpointer value,
+-        gpointer data)
+-{
+-    terminal_t *term = value;
+-    time_evt_t *te = data;
+-
+-    link_tick(te, term->link);
+-
+-    return false;
++    for (int i = 0; i < tlist->n; ++i) {
++        link_rx_glitch(tlist->entries[i].term->link);
++    }
+ }
+ 
+ void terminal_list_tick(terminal_list_t* tlist, time_evt_t *te)
+ {
+-    g_tree_foreach(tlist->tree, terminal_tick, te);
++    for (int i = 0; i < tlist->n; ++i) {
++        link_tick(te, tlist->entries[i].term->link);
++    }
+ }
+-
+diff --git a/tetrapol/upstream/tetrapol.c b/tetrapol/upstream/tetrapol.c
+index 066f9ee..af1b379 100644
+--- a/tetrapol/upstream/tetrapol.c
++++ b/tetrapol/upstream/tetrapol.c
+@@ -2,8 +2,7 @@
+ 
+ #include <tetrapol/log.h>
+ #include <tetrapol/tetrapol_int.h>
+-#include <tetrapol/tsdu_json.h>
+-#include <tetrapol/tsdu_print.h>
++#include <tetrapol/helper_out.h>
+ 
+ #include <stdlib.h>
+ #include <string.h>
+@@ -66,15 +65,18 @@ void tetrapol_evt_tsdu(tpol_t *tpol, const tpol_tsdu_t *tpol_tsdu)
+     }
+ 
+     tsdu_t *tsdu = NULL;
+-    tsdu_decode(tpol_tsdu->data, tpol_tsdu->data_len, &tsdu);
+-    if (tsdu) {
+-        LOG_IF(INFO) {
+-            LOG_("\n");
+-            LOGF("\tTSAP_ID=%d\tPRIO=%d\n", tpol_tsdu->tsap_id, tpol_tsdu->prio);
+-            tsdu_print(tsdu);
+-        }
+-        tsdu_destroy(tsdu);
++    /* FoxSDR helper: messages that carry user data (short data, datagrams, ...) are not decoded at all */
++    if (tpol_tsdu->data_len > 0 && !tp_codop_is_data(tpol_tsdu->data[0])) {
++        /* Several decoders read a fixed-size field (an address, a key reference ...) after checking only a minimum
++           length. Hand them a copy with zero padding behind the message, so such a read never leaves the buffer. */
++        uint8_t padded[4096 + 64];
++        const int n = tpol_tsdu->data_len > 4096 ? 4096 : tpol_tsdu->data_len;
++        memcpy(padded, tpol_tsdu->data, n);
++        memset(padded + n, 0, 64);
++        tsdu_decode(padded, n, &tsdu);
+     }
+-
+-    tsdu_json(tpol, tpol_tsdu);
++    /* FoxSDR helper: upstream printed the decoded TSDU as text (tsdu_print) and dumped its bytes as hex JSON
++       (tsdu_json). The helper reports the decoded fields only (tp_emit_tsdu); payload bytes are never output. */
++    tp_emit_tsdu(tpol, tpol_tsdu, tsdu);
++    tsdu_destroy(tsdu);
+ }
+diff --git a/tetrapol/upstream/tetrapol/frame.h b/tetrapol/upstream/tetrapol/frame.h
+index 822f5c2..c3c9cf7 100644
+--- a/tetrapol/upstream/tetrapol/frame.h
++++ b/tetrapol/upstream/tetrapol/frame.h
+@@ -57,16 +57,19 @@ typedef struct {
+ /// PAS 0001-2 6.4
+ typedef struct {
+     // TODO
++    uint8_t unused_;   /* FoxSDR helper: MSVC does not accept an empty struct */
+ } frame_rach_t;
+ 
+ /// PAS 0001-2 6.5
+ typedef struct {
+     // TODO
++    uint8_t unused_;   /* FoxSDR helper: MSVC does not accept an empty struct */
+ } frame_training_t;
+ 
+ /// PAS 0001-2 6.6
+ typedef struct {
+     // TODO
++    uint8_t unused_;   /* FoxSDR helper: MSVC does not accept an empty struct */
+ } frame_direct_emergecy_t;
+ 
+ typedef struct {
+diff --git a/tetrapol/upstream/tetrapol/msg_coding.h b/tetrapol/upstream/tetrapol/msg_coding.h
+index baf1073..14d2466 100644
+--- a/tetrapol/upstream/tetrapol/msg_coding.h
++++ b/tetrapol/upstream/tetrapol/msg_coding.h
+@@ -486,4 +486,4 @@ enum {
+ bool address_decode(address_t *address, const uint8_t **data_ptr);
+ void address_print(const address_t *address);
+ 
+-int address_list_decode(address_list_t **ptr_addrs, const uint8_t *data);
++int address_list_decode(address_list_t **ptr_addrs, const uint8_t *data, int len);
+diff --git a/tetrapol/upstream/tetrapol/tsdu.h b/tetrapol/upstream/tetrapol/tsdu.h
+index ffef0dc..9afcdb6 100644
+--- a/tetrapol/upstream/tetrapol/tsdu.h
++++ b/tetrapol/upstream/tetrapol/tsdu.h
+@@ -139,9 +139,13 @@ typedef struct {
+       In subclassed TSDU structure, noptionals pointers should be present.
+       Those are initialized to NULL by tsdu_base_init and freed by tsdu_destroy.
+       */
+-    void *optionals[];
++    /* FoxSDR helper change: upstream declares "void *optionals[];" here (a flexible array member inside a struct
++       that is embedded in other structs, a GNU extension MSVC rejects). The pointers are the memory directly behind
++       the base, so they are reached with TSDU_OPTIONALS(); the layout of every structure is unchanged. */
+ } tsdu_base_t;
+ 
++#define TSDU_OPTIONALS(tsdu) ((void **)((tsdu_base_t *)(tsdu) + 1))
++
+ /// structure for commands not in specification
+ typedef struct {
+     tsdu_base_t base;
+diff --git a/tetrapol/upstream/tp_timer.c b/tetrapol/upstream/tp_timer.c
+index d8c1104..cc0ebb5 100644
+--- a/tetrapol/upstream/tp_timer.c
++++ b/tetrapol/upstream/tp_timer.c
+@@ -59,7 +59,7 @@ bool tp_timer_register(tp_timer_t *timer, timer_callback_t timer_func, void *ptr
+     }
+ 
+     ++timer->ncallbacks;
+-    callback_t *p = realloc(timer->callbacks, sizeof(callback_t[timer->ncallbacks]));
++    callback_t *p = realloc(timer->callbacks, sizeof(callback_t) * timer->ncallbacks);
+     if (!p) {
+         LOG(ERR, "ERR OOM");
+         return false;
+@@ -77,7 +77,7 @@ void tp_timer_cancel(tp_timer_t *timer, timer_callback_t timer_func, void *ptr)
+         if (timer->callbacks[i].func == timer_func &&
+                 timer->callbacks[i].ptr == ptr) {
+             memmove(&timer->callbacks[i], &timer->callbacks[i + 1],
+-                    sizeof(callback_t[timer->ncallbacks - i - 1]));
++                    sizeof(callback_t) * (timer->ncallbacks - i - 1));
+             --timer->ncallbacks;
+             return;
+         }
+diff --git a/tetrapol/upstream/tpdu.c b/tetrapol/upstream/tpdu.c
+index 886cc34..210bea5 100644
+--- a/tetrapol/upstream/tpdu.c
++++ b/tetrapol/upstream/tpdu.c
+@@ -441,7 +441,12 @@ static int tpdu_ui_push_hdlc_frame_(tpdu_ui_t *tpdu,
+         if ((tpdu->fr_type == FRAME_TYPE_DATA && hdlc_fr->nbits > (3*8)) ||
+                 (tpdu->fr_type == FRAME_TYPE_HR_DATA &&
+                  hdlc_fr->nbits > (6*8))) {
+-            const int len = get_bits(8, hdlc_fr->data + 1, 0);
++            int len = get_bits(8, hdlc_fr->data + 1, 0);
++            /* FoxSDR helper: the length byte comes off the air; never read past the HDLC payload */
++            if (len > hdlc_fr->nbits / 8 - 2) {
++                LOG(WTF, "DU length %d exceeds payload %d", len, hdlc_fr->nbits / 8 - 2);
++                return -1;
++            }
+ 
+             memcpy(&tpol_tsdu.addr, &hdlc_fr->addr, sizeof(tpol_tsdu.addr));
+             tpol_tsdu.data_len = len;
+@@ -549,13 +554,19 @@ static int tpdu_ui_push_hdlc_frame_(tpdu_ui_t *tpdu,
+             hdlc_frame_t *hfr = seg_du->hdlc_frs[i];
+             int n_ext = 1;
+             // skip ext headers
+-            while (get_bits(1, hfr->data + n_ext - 1, 0)) {
++            /* FoxSDR helper: bounded by the payload length (damaged headers could run off the end) */
++            while (n_ext < hfr->nbits / 8 && get_bits(1, hfr->data + n_ext - 1, 0)) {
+                 ++n_ext;
+             }
+             int n;
++            if (n_ext >= hfr->nbits / 8) {
++                LOG(WTF, "segment header longer than payload");
++                return -1;
++            }
+             if (i == (seg_du->nsegments - 1)) {
+                 n = hfr->data[n_ext++];
+-                if (n > hfr->nbits / 8) {
++                /* FoxSDR helper: the length is counted from the payload start, not from the HDLC start */
++                if (n > hfr->nbits / 8 - n_ext) {
+                     LOG(WTF, "hdlc_fr.len=%d < tsdu_payload_len=%d",
+                             hfr->nbits / 8, n);
+                     return -1;
+@@ -563,6 +574,9 @@ static int tpdu_ui_push_hdlc_frame_(tpdu_ui_t *tpdu,
+             } else {
+                 n = (hfr->nbits / 8) - n_ext;
+             }
++            if (n < 0) {
++                return -1;
++            }
+             data_len += n;
+             memcpy(d, &hfr->data[n_ext], n);
+             d += n;
+diff --git a/tetrapol/upstream/tsdu.c b/tetrapol/upstream/tsdu.c
+index 0258ef0..98f4a32 100644
+--- a/tetrapol/upstream/tsdu.c
++++ b/tetrapol/upstream/tsdu.c
+@@ -30,7 +30,7 @@ const int CELL_RADIO_PARAM_RX_LEV_ACCESS_TO_DBM[16] = {
+ static void tsdu_base_set_nopts(tsdu_base_t *tsdu, int noptionals)
+ {
+     tsdu->noptionals = noptionals;
+-    memset(tsdu->optionals, 0, sizeof(void *[noptionals]));
++    memset(TSDU_OPTIONALS(tsdu), 0, sizeof(void *) * noptionals);
+ }
+ 
+ #define tsdu_create(TSDU_TYPE, noptionals) \
+@@ -52,7 +52,7 @@ void tsdu_destroy(tsdu_base_t *tsdu)
+         return;
+     }
+     for (int i = 0; i < tsdu->noptionals; ++i) {
+-        free(tsdu->optionals[i]);
++        free(TSDU_OPTIONALS(tsdu)[i]);
+     }
+     free(tsdu);
+ }
+@@ -245,20 +245,20 @@ static tsdu_d_additional_participants_t *d_additional_participants_decode(
+     }
+ 
+     tsdu->coverage_id = data[1];
+-    if (address_list_decode(&tsdu->calling_adr, &data[2]) == -1) {
++    if (address_list_decode(&tsdu->calling_adr, &data[2], len - 2) == -1) {
+         tsdu_destroy(&tsdu->base);
+         return NULL;
+     }
+ 
+     if (len >= 8) {
+-        if (address_list_decode(&tsdu->calling_adr, &data[7]) == -1) {
++        if (address_list_decode(&tsdu->calling_adr, &data[7], len - 7) == -1) {
+             tsdu_destroy(&tsdu->base);
+             return NULL;
+         }
+     }
+ 
+     if (len >= 13) {
+-        if (address_list_decode(&tsdu->calling_adr, &data[12]) == -1) {
++        if (address_list_decode(&tsdu->calling_adr, &data[12], len - 12) == -1) {
+             tsdu_destroy(&tsdu->base);
+             return NULL;
+         }
+@@ -517,7 +517,7 @@ static tsdu_d_group_list_t *d_group_list_decode(const uint8_t *data, int len)
+ 
+         if (type_nb.type == TYPE_NB_TYPE_EMERGENCY) {
+             const int n = tsdu->nemergency + type_nb.number;
+-            const int l = sizeof(tsdu_d_group_list_emergency_t[n]);
++            const int l = sizeof(tsdu_d_group_list_emergency_t) * n;
+             tsdu_d_group_list_emergency_t *p = realloc(tsdu->emergency, l);
+             if (!p) {
+                 tsdu_destroy(&tsdu->base);
+@@ -541,7 +541,7 @@ static tsdu_d_group_list_t *d_group_list_decode(const uint8_t *data, int len)
+ 
+         if (type_nb.type == TYPE_NB_TYPE_OPEN) {
+             const int n = tsdu->nopen + type_nb.number;
+-            const int l = sizeof(tsdu_d_group_list_open_t[n]);
++            const int l = sizeof(tsdu_d_group_list_open_t) * n;
+             tsdu_d_group_list_open_t *p = realloc(tsdu->open, l);
+             if (!p) {
+                 tsdu_destroy(&tsdu->base);
+@@ -569,7 +569,7 @@ static tsdu_d_group_list_t *d_group_list_decode(const uint8_t *data, int len)
+         }
+         if (type_nb.type == TYPE_NB_TYPE_TALK_GROUP) {
+             const int n = tsdu->ngroup + type_nb.number;
+-            const int l = sizeof(tsdu_d_group_list_talk_group_t[n]);
++            const int l = sizeof(tsdu_d_group_list_talk_group_t) * n;
+             tsdu_d_group_list_talk_group_t *p = realloc(tsdu->group, l);
+             if (!p) {
+                 tsdu_destroy(&tsdu->base);
+@@ -630,7 +630,7 @@ static cell_id_list_t *iei_cell_id_list_decode(cell_id_list_t *cell_ids,
+     int n = cell_ids ? cell_ids->len : 0;
+     n += len / 2;
+     cell_id_list_t *p = realloc(cell_ids,
+-            sizeof(cell_id_list_t) + sizeof(cell_id_t[n]));
++            sizeof(cell_id_list_t) + sizeof(cell_id_t) * n);
+     if (!p) {
+         LOG(ERR, "ERR OOM");
+         return NULL;
+@@ -654,7 +654,7 @@ cell_bn_list_t *iei_cell_bn_list_decode(
+     int n = cell_bns ? cell_bns->len : 0;
+     n +=  len * 2 / 3;
+     cell_bn_list_t *p = realloc(cell_bns,
+-            sizeof(cell_bn_list_t) + sizeof(cell_bn_t[n]));
++            sizeof(cell_bn_list_t) + sizeof(cell_bn_t) * n);
+     if (!p) {
+         LOG(ERR, "ERR OOM");
+         return NULL;

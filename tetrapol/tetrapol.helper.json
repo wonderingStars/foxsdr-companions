@@ -1,0 +1,32 @@
+{
+  "name": "tetrapol",
+  "version": "0.1.0",
+  "licence": "GPL-2.0-only",
+  "source": "https://github.com/airphel/tetrapol-kit-2023",
+  "upstream": "tetrapol-kit-2023 (airphel), commit 09def9dcbc4c3778ab4a8813b6a0c7c48ae40910",
+  "executable": "tetrapol-helper.exe",
+  "protocol": 1,
+  "scope": "TETRAPOL control-channel signalling only: no voice, no data content, no decryption",
+  "input": "iq",
+  "formats": ["cf32", "cs16", "bits"],
+  "format_notes": {
+    "cf32": "interleaved float32 I,Q of ONE TETRAPOL channel at baseband (carrier within about 2 kHz of 0 Hz, channel filtered to about 10 kHz)",
+    "cs16": "interleaved little-endian int16 I,Q, same signal",
+    "bits": "hard-decided GMSK bits as gnuradio gmsk_demod writes them (the input of upstream tetrapol_dump): one byte, 0 or 1, per bit, 8000 bit/s"
+  },
+  "rate": {"min": 16000, "max": 500000, "default": 48000, "bits": 8000},
+  "options": ["--channel cch|tch", "--band uhf|vhf", "--direction down|up", "--scr N", "--hide-ids", "--hide-ids-seed N", "--no-frames", "--report-bad-frames", "-v"],
+  "events": {
+    "sync": ["state"],
+    "scr": ["scr"],
+    "frame": ["frame_no", "state", "syndromes", "bits_fixed"],
+    "message": ["log_ch", "frame_no", "tpdu", "addr", "prio", "tsap_id", "tsap_ref_swmi", "tsap_ref_rt", "msg", "class", "codop", "len", "text", "cell_state", "cell_id", "bn_id", "u_ch_scrambling", "radio_param", "band", "channel_id", "cell_config", "country_code", "system_id", "loc_area", "cell_bn", "system_time", "cell_access", "superframe_cpt", "ccr_config", "adjacent_cells", "cell_ids", "adjacent_bn", "activation_mode", "group_id", "coverage_id", "d_ch_scrambling", "key_reference", "addr_tti", "calling_adr", "host_adr", "cause", "call_type", "dch_low_layer", "complete_reg", "rt_status", "rt_data_info"],
+    "paging": ["frame_no", "activation_bitmap", "addrs"],
+    "ack": ["frame_no", "acks", "nacks"],
+    "traffic": ["kind", "text", "syndromes"],
+    "stats": ["bits", "frames_ok", "frames_bad", "frames_corrected", "messages", "messages_data_not_decoded", "messages_unknown", "traffic_frames_not_decoded", "sync_found", "sync_lost", "lines_dropped"],
+    "status": ["text"]
+  },
+  "reserved_field": "text",
+  "ids": "addr, group_id, host_adr, calling_adr, addr_tti, serial_nb and the paging / ack address lists are terminal or group identities; with --hide-ids they are 'h:xxxxxxxx' hashes"
+}
