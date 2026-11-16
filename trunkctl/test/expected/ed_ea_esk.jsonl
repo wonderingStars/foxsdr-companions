@@ -1,0 +1,14 @@
+{"helper":"trunkctl","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/TrunkRecorder/trunk-recorder","upstream":"trunk-recorder 1aac86c (SmartNet, from OP25 rx_smartnet), edacs-fm d92422e (EDACS)","format":"s16","rate":28800,"protocols":["edacs"]}
+{"t":0.036597,"type":"status","proto":"edacs","text":"edacs: control channel locked"}
+{"t":0.036597,"type":"sysinfo","proto":"edacs","kind":"peer_site","site":22,"control_lcn":3,"variant":"ea"}
+{"t":0.066632,"type":"sysinfo","proto":"edacs","kind":"site","site":137,"variant":"ea"}
+{"t":0.096632,"type":"sysinfo","proto":"edacs","kind":"control_channel","lcn":1,"variant":"ea"}
+{"t":0.126597,"type":"grant","proto":"edacs","variant":"ea","call":"group","mode":"digital","tgid":4660,"rid":654321,"lcn":5,"channel":5,"freq_hz":851012500,"update":false}
+{"t":0.186597,"type":"grant","proto":"edacs","variant":"ea","call":"group","mode":"data","tgid":171,"rid":100001,"lcn":7,"channel":7,"update":false}
+{"t":0.216597,"type":"grant","proto":"edacs","variant":"ea","call":"group","mode":"tdma","tgid":1911,"rid":42,"lcn":9,"channel":9,"update":false}
+{"t":0.246597,"type":"msg","proto":"edacs","name":"lcn_status","state":"reserved","lcn":27,"variant":"ea","tgid":4660,"rid":1}
+{"t":0.276597,"type":"msg","proto":"edacs","name":"patch","from_tgid":8193,"to_tgid":8194}
+{"t":0.306597,"type":"msg","proto":"edacs","name":"kick","rid":555555}
+{"t":0.336597,"type":"sysinfo","proto":"edacs","kind":"peer_site","site":23,"control_lcn":4,"variant":"ea"}
+{"t":0.366632,"type":"sysinfo","proto":"edacs","kind":"site","site":137,"variant":"ea"}
+{"t":0.370833,"type":"stats","proto":"edacs","frames":12,"messages":11,"unknown":0,"bad":0,"corrected":0,"lost":0,"locked":true}

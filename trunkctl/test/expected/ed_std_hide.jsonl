@@ -1,0 +1,11 @@
+{"helper":"trunkctl","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/TrunkRecorder/trunk-recorder","upstream":"trunk-recorder 1aac86c (SmartNet, from OP25 rx_smartnet), edacs-fm d92422e (EDACS)","format":"s16","rate":28800,"protocols":["edacs"]}
+{"t":0.036597,"type":"status","proto":"edacs","text":"edacs: control channel locked"}
+{"t":0.036597,"type":"status","proto":"edacs","text":"edacs: standard/networked detected"}
+{"t":0.036597,"type":"grant","proto":"edacs","variant":"standard","call":"group","mode":"analog","tgid":"T1","rid":"R1","lcn":2,"channel":2,"update":false}
+{"t":0.066597,"type":"sysinfo","proto":"edacs","kind":"site","site":41,"variant":"standard"}
+{"t":0.066597,"type":"sysinfo","proto":"edacs","kind":"control_channel","lcn":1,"variant":"standard"}
+{"t":0.096632,"type":"grant","proto":"edacs","variant":"standard","call":"group","mode":"digital","tgid":"T2","rid":"R2","lcn":12,"channel":12,"update":false}
+{"t":0.156597,"type":"msg","proto":"edacs","name":"lcn_status","state":"system_busy","lcn":30,"variant":"standard","tgid":"T2","rid":"R2"}
+{"t":0.186597,"type":"sysinfo","proto":"edacs","kind":"site","site":41,"variant":"standard"}
+{"t":0.186597,"type":"sysinfo","proto":"edacs","kind":"control_channel","lcn":1,"variant":"standard"}
+{"t":0.190833,"type":"stats","proto":"edacs","frames":6,"messages":7,"unknown":0,"bad":0,"corrected":0,"lost":0,"locked":true}

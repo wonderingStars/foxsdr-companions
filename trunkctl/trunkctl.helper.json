@@ -1,0 +1,23 @@
+{
+  "name": "trunkctl",
+  "version": "0.1.0",
+  "licence": "GPL-3.0-only",
+  "source": "https://github.com/TrunkRecorder/trunk-recorder",
+  "upstream": "trunk-recorder 1aac86c (SmartNet, from OP25 rx_smartnet), edacs-fm d92422e (EDACS)",
+  "executable": "trunkctl.exe",
+  "protocol": 1,
+  "input": "audio",
+  "formats": ["s16", "f32", "cs16", "cf32"],
+  "rate": {"min": 7200, "recommended": 28800},
+  "baud": {"smartnet": 3600, "edacs": 9600},
+  "events": {
+    "grant": ["proto", "call", "mode", "tgid", "rid", "dst_rid", "channel", "lcn", "freq_hz", "encrypted", "emergency", "update", "variant", "agency", "fleet", "subfleet"],
+    "sysinfo": ["proto", "kind", "sys_id", "site", "channel", "freq_hz", "cc_channel", "cc_freq_hz", "lcn", "control_lcn", "datetime", "weekday", "variant"],
+    "affiliation": ["proto", "rid", "tgid"],
+    "msg": ["proto", "name", "rid", "dst_rid", "tgid", "sub_tgid", "from_tgid", "to_tgid", "reason", "code", "opcode", "status", "message", "mode", "site", "state", "lcn", "variant"],
+    "osw": ["proto", "addr", "group", "cmd"],
+    "frame": ["proto", "a", "b", "ok_a", "ok_b", "errors"]
+  },
+  "reserved_field": "text",
+  "options": ["--protocol", "--polarity", "--bandplan", "--obt-base", "--obt-high", "--obt-spacing", "--obt-offset", "--variant", "--esk", "--afs", "--bch-correct", "--lcn", "--lcn-file", "--update-interval", "--stats-interval", "--hide-ids", "--raw"]
+}

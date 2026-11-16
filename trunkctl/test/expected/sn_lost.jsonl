@@ -1,0 +1,4 @@
+{"helper":"trunkctl","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/TrunkRecorder/trunk-recorder","upstream":"trunk-recorder 1aac86c (SmartNet, from OP25 rx_smartnet), edacs-fm d92422e (EDACS)","format":"s16","rate":48000,"protocols":["smartnet"]}
+{"t":0.048813,"type":"status","proto":"smartnet","text":"smartnet: control channel locked"}
+{"t":2.402167,"type":"status","proto":"smartnet","text":"smartnet: control channel lost"}
+{"t":3.913312,"type":"stats","proto":"smartnet","frames":59,"messages":0,"unknown":0,"gaps":0,"lost":1,"locked":false}

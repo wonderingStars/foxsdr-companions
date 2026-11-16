@@ -1,0 +1,5 @@
+# logical channel numbers for the EDACS tests
+5 851.0125
+12,852.5000   # comma form
+
+7 853.0

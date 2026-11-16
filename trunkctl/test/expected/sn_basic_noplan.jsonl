@@ -1,0 +1,23 @@
+{"helper":"trunkctl","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/TrunkRecorder/trunk-recorder","upstream":"trunk-recorder 1aac86c (SmartNet, from OP25 rx_smartnet), edacs-fm d92422e (EDACS)","format":"s16","rate":48000,"protocols":["smartnet"]}
+{"t":0.048813,"type":"status","proto":"smartnet","text":"smartnet: control channel locked"}
+{"t":0.608812,"type":"sysinfo","proto":"smartnet","kind":"system","sys_id":"0x1234","channel":168}
+{"t":0.702146,"type":"grant","proto":"smartnet","call":"group","mode":"analog","tgid":6720,"rid":12345,"channel":288,"encrypted":false,"emergency":false,"update":false}
+{"t":0.912146,"type":"grant","proto":"smartnet","call":"group","mode":"digital","tgid":11088,"rid":777,"channel":240,"encrypted":true,"emergency":false,"update":false}
+{"t":1.005479,"type":"grant","proto":"smartnet","call":"group","mode":"analog","tgid":15360,"rid":4242,"channel":723,"encrypted":false,"emergency":true,"update":false}
+{"t":1.098812,"type":"grant","proto":"smartnet","call":"private","mode":"analog","rid":5001,"dst_rid":5002,"channel":336,"update":false}
+{"t":1.192146,"type":"affiliation","proto":"smartnet","rid":31337,"tgid":6720}
+{"t":1.285479,"type":"affiliation","proto":"smartnet","rid":31338,"tgid":6720}
+{"t":1.378812,"type":"msg","proto":"smartnet","name":"status_ack","rid":4711,"status":3}
+{"t":1.472146,"type":"msg","proto":"smartnet","name":"denied","rid":4712,"reason":"radio_id"}
+{"t":1.565479,"type":"msg","proto":"smartnet","name":"dynamic_regroup","rid":6001,"tgid":6736}
+{"t":1.588812,"type":"msg","proto":"smartnet","name":"group_busy","tgid":6720}
+{"t":1.612146,"type":"msg","proto":"smartnet","name":"emergency_busy","tgid":6720}
+{"t":1.705542,"type":"sysinfo","proto":"smartnet","kind":"datetime","datetime":"2026-11-12 14:35","weekday":"Thursday"}
+{"t":1.822146,"type":"sysinfo","proto":"smartnet","kind":"system","sys_id":"0x1234","channel":168}
+{"t":1.915479,"type":"sysinfo","proto":"smartnet","kind":"alt_cc","sys_id":"0x1234","channel":200}
+{"t":2.032146,"type":"msg","proto":"smartnet","name":"patch","tgid":256,"sub_tgid":6720,"mode":3}
+{"t":2.125479,"type":"msg","proto":"smartnet","name":"emergency_ptt","rid":8888,"tgid":6720}
+{"t":2.195479,"type":"msg","proto":"smartnet","name":"amss","site":5}
+{"t":2.218812,"type":"sysinfo","proto":"smartnet","kind":"scan_marker","sys_id":"0x1234"}
+{"t":2.242146,"type":"sysinfo","proto":"smartnet","kind":"control_channel","channel":168}
+{"t":2.486646,"type":"stats","proto":"smartnet","frames":105,"messages":20,"unknown":0,"gaps":0,"lost":0,"locked":true}

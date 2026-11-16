@@ -1,0 +1,3 @@
+{"helper":"trunkctl","version":"0.1.0","protocol":1,"licence":"GPL-3.0-only","source":"https://github.com/TrunkRecorder/trunk-recorder","upstream":"trunk-recorder 1aac86c (SmartNet, from OP25 rx_smartnet), edacs-fm d92422e (EDACS)","format":"s16","rate":28800,"protocols":["smartnet","edacs"]}
+{"t":0.000000,"type":"stats","proto":"smartnet","frames":0,"messages":0,"unknown":0,"gaps":0,"lost":0,"locked":false}
+{"t":0.000000,"type":"stats","proto":"edacs","frames":0,"messages":0,"unknown":0,"bad":0,"corrected":0,"lost":0,"locked":false}
