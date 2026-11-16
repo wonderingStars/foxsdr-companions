@@ -1,0 +1,34 @@
+{
+  "name": "trunkfmt",
+  "version": "0.1.0",
+  "licence": "GPL-3.0-or-later",
+  "source": "https://github.com/DSheirer/sdrtrunk",
+  "description": "LoJack LJ1200, Tait 1200 (CCDI GPS and ANI), Fleetsync II, MPT-1327, LTR, LTR-Net, Passport and Motorola Connect Plus signalling decoders, ported from sdrtrunk",
+  "executable": "trunkfmt.exe",
+  "input": "audio",
+  "format": "s16",
+  "formats": ["s16", "f32"],
+  "rate": { "recommended": 8000, "min": 4000, "max": 192000 },
+  "args": ["--decoders lj1200,tait,fleetsync2,mpt1327,ltr,ltrnet,passport", "--invert", "--no-unchecked", "--mpt-french"],
+  "modes": [
+    { "format": "csbk-hex", "input": "text", "description": "text lines: 'csbk <24 hex digits>' or 'slc <11 hex digits>'; rate not used" }
+  ],
+  "events": {
+    "lj1200": ["crc", "function", "function_code", "address", "reply_code", "site", "vrc", "lrc", "crc_field", "msg"],
+    "lj1200_transponder": ["crc", "crc_field", "msg"],
+    "tait_gps": ["crc", "from", "to", "lat", "lon", "gps_time", "day", "field_388_391", "speed_kph", "size", "size2", "msg"],
+    "tait_ani": ["crc", "from", "to", "size", "size2", "msg"],
+    "fleetsync": ["crc", "kind", "from", "emergency", "lone_worker", "paging", "acknowledge", "ani", "msg"],
+    "fleetsync_status": ["crc", "kind", "from", "to", "status", "emergency", "lone_worker", "paging", "acknowledge", "ani", "msg"],
+    "fleetsync_gps": ["crc", "kind", "from", "to", "lat", "lon", "heading", "speed", "gps_time", "gps_year_field", "gps_month", "gps_day", "msg"],
+    "ltr": ["direction", "message", "crc", "area", "lcn", "home", "group", "free", "talkgroup", "msg"],
+    "ltrnet": ["direction", "message", "crc", "talkgroup", "area", "lcn", "home", "group", "free", "channels", "frequency_hz", "half", "neighbor", "rank", "unique_id", "site", "esn", "esn_high", "esn_low", "text", "msg"],
+    "passport": ["message", "dcc", "site", "lcn", "free", "type_number", "group", "radio_id", "lcn_freq_hz", "free_freq_hz", "site_band", "neighbor_band", "neighbor_freq_hz", "corrected", "text", "msg"],
+    "mpt1327": ["sync", "message", "crc", "description", "prefix", "ident1", "ident2", "channel", "from", "to", "system", "text", "msg"],
+    "connectplus_csbk": ["decoded", "fid", "vendor", "csbko", "name", "last_block", "protected", "crc", "source", "target", "radio", "talkgroup", "lsn_field", "lcn", "timeslot", "lsn", "neighbors", "window", "superframe", "reserved_for", "message_type", "version", "data_lcn", "unk", "msg"],
+    "connectplus_slc": ["crc", "slc_opcode", "decoded", "name", "network", "site", "msg"],
+    "csbk": ["decoded", "fid", "vendor", "csbko", "crc", "msg"],
+    "parse_error": ["line", "text"],
+    "stats": ["samples", "symbols", "lj1200", "lj1200_failed_crc", "lj1200_transponder", "tait_ani", "tait_gps", "suppressed_unchecked", "fleetsync2", "fleetsync2_invalid", "mpt1327", "mpt1327_invalid", "ltr", "ltrnet", "ltrnet_failed_crc", "passport", "passport_failed_crc", "lines", "decoded", "not_decoded", "errors", "errors_not_printed"]
+  }
+}

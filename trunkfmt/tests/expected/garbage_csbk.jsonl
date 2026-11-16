@@ -1,0 +1,22 @@
+{"helper":"trunkfmt","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/DSheirer/sdrtrunk","upstream":"DSheirer/sdrtrunk a53f6e9d992dcd94adc73a2591c3b4690a66a6b1"}
+{"t":0,"type":"parse_error","line":1,"text":"unexpected character '\u00ca'"}
+{"t":0,"type":"parse_error","line":3,"text":"unexpected character '\u00b4'"}
+{"t":0,"type":"parse_error","line":4,"text":"unexpected character '\u00a6'"}
+{"t":0,"type":"parse_error","line":5,"text":"unexpected character '&'"}
+{"t":0,"type":"parse_error","line":6,"text":"unexpected character '\u001c'"}
+{"t":0,"type":"parse_error","line":7,"text":"unexpected character 'O'"}
+{"t":0,"type":"parse_error","line":8,"text":"unexpected character '\u0092'"}
+{"t":0,"type":"parse_error","line":9,"text":"unexpected character '\u00e0'"}
+{"t":0,"type":"parse_error","line":10,"text":"unexpected character 'g'"}
+{"t":0,"type":"parse_error","line":11,"text":"unexpected character '\u00d6'"}
+{"t":0,"type":"parse_error","line":12,"text":"unexpected character '\u00e4'"}
+{"t":0,"type":"parse_error","line":13,"text":"unexpected character '\u00a3'"}
+{"t":0,"type":"parse_error","line":14,"text":"unexpected character 'X'"}
+{"t":0,"type":"parse_error","line":15,"text":"unexpected character '\u00b1'"}
+{"t":0,"type":"parse_error","line":16,"text":"unexpected character '\u00a2'"}
+{"t":0,"type":"parse_error","line":17,"text":"unexpected character '\u0010'"}
+{"t":0,"type":"parse_error","line":18,"text":"unexpected character '\u0010'"}
+{"t":0,"type":"parse_error","line":19,"text":"unexpected character '\u00db'"}
+{"t":0,"type":"parse_error","line":20,"text":"unexpected character '\u00ba'"}
+{"t":0,"type":"parse_error","line":21,"text":"unexpected character '\u00a8'"}
+{"t":0,"type":"stats","lines":1256,"decoded":0,"not_decoded":0,"errors":1244,"errors_not_printed":1224}

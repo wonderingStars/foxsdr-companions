@@ -1,0 +1,17 @@
+{"helper":"trunkfmt","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/DSheirer/sdrtrunk","upstream":"DSheirer/sdrtrunk a53f6e9d992dcd94adc73a2591c3b4690a66a6b1"}
+{"t":0.357,"type":"ltrnet","direction":"osw","message":"OSW_CALL_START","crc":"pass","talkgroup":"03-012","area":0,"lcn":5,"free":7,"text":"CALL START TALKGROUP:03-012 AREA:0 LCN:5 FREE:7","msg":"AC0A30C3E2"}
+{"t":0.704,"type":"ltrnet","direction":"osw","message":"OSW_SYSTEM_IDLE","crc":"pass","area":0,"lcn":4,"home":4,"group":255,"free":4,"text":"IDLE - AREA:0 LCN:4 HOME:4 GROUP:255 FREE:4","msg":"AC084FF21A"}
+{"t":1.050,"type":"ltrnet","direction":"osw","message":"OSW_CALL_END","crc":"pass","talkgroup":"03-012","area":0,"lcn":31,"free":7,"text":"CALL END TALKGROUP:03-012 AREA:0 LCN:31 FREE:7","msg":"AC3E30C3D3"}
+{"t":1.397,"type":"ltrnet","direction":"osw","message":"OSW_SITE_ID","crc":"pass","site":345,"text":"SITE:345","msg":"AC2560ACAB"}
+{"t":1.744,"type":"ltrnet","direction":"osw","message":"OSW_TRANSMIT_FREQUENCY_LOW","crc":"pass","lcn":5,"frequency_hz":0,"half":"low","text":"LCN:5 TRANSMIT FREQUENCY:0 - LOW","msg":"AC3051F47E"}
+{"t":2.090,"type":"ltrnet","direction":"osw","message":"OSW_TRANSMIT_FREQUENCY_HIGH","crc":"pass","lcn":5,"frequency_hz":171730000,"half":"high","text":"LCN:5 TRANSMIT FREQUENCY:171730000 - HIGH","msg":"AC30580235"}
+{"t":2.437,"type":"ltrnet","direction":"osw","message":"OSW_RECEIVE_FREQUENCY_HIGH","crc":"pass","lcn":6,"frequency_hz":0,"half":"high","text":"LCN:6 RECEIVE FREQUENCY:0 - HIGH","msg":"AC3268014C"}
+{"t":2.784,"type":"ltrnet","direction":"osw","message":"OSW_RECEIVE_FREQUENCY_LOW","crc":"pass","lcn":6,"frequency_hz":160336250,"half":"low","text":"LCN:6 RECEIVE FREQUENCY:160336250 - LOW","msg":"AC32602696"}
+{"t":3.130,"type":"ltrnet","direction":"osw","message":"OSW_CHANNEL_MAP_HIGH","crc":"pass","channels":[11,13,16,18,20],"text":"CHANNEL MAP HIGH [11,13,16,18,20]","msg":"AC386A5067"}
+{"t":3.477,"type":"ltrnet","direction":"osw","message":"OSW_NEIGHBOR_ID","crc":"pass","neighbor":77,"rank":3,"text":"NEIGHBOR:77 RANK:3","msg":"AC344026D9"}
+{"t":3.823,"type":"ltrnet","direction":"osw","message":"OSW_REGISTRATION_ACCEPT","crc":"pass","unique_id":41251,"text":"REGISTRATION ACCEPT - RADIO UNIQUE ID: 41251","msg":"AC235091F3"}
+{"t":4.170,"type":"ltrnet","direction":"isw","message":"ISW_CALL_START","crc":"pass","talkgroup":"03-012","area":0,"lcn":5,"free":21,"text":"CALL START TALKGROUP:03-012 AREA:0 LCN:5 FREE:21","msg":"AC0A30CAD4"}
+{"t":4.517,"type":"ltrnet","direction":"isw","message":"ISW_REQUEST_ACCESS","crc":"pass","talkgroup":"03-012","area":0,"lcn":5,"free":31,"text":"REQUEST ACCESS TALKGROUP:03-012 AREA:0 LCN:5 FREE:31","msg":"AC0A30CFCA"}
+{"t":5.210,"type":"ltrnet","direction":"isw","message":"ISW_CALL_END","crc":"pass","talkgroup":"03-012","area":0,"lcn":5,"free":23,"text":"CALL END TALKGROUP:03-012 AREA:0 LCN:5 FREE:23","msg":"AC0A30CBD3"}
+{"t":5.556,"type":"ltrnet","direction":"osw","message":"OSW_UNKNOWN","crc":"pass","area":0,"lcn":22,"home":9,"group":3,"free":3,"text":"OSW UNKNOWN MESSAGE - AREA:0 LCN:22 HOME:9 GROUP3 FREE:3","msg":"AC2C9031F0"}
+{"t":6.026,"type":"stats","samples":48208,"symbols":0,"lj1200":0,"lj1200_failed_crc":0,"lj1200_transponder":0,"tait_ani":0,"tait_gps":0,"suppressed_unchecked":0,"fleetsync2":0,"fleetsync2_invalid":0,"mpt1327":0,"mpt1327_invalid":0,"ltr":0,"ltrnet":15,"ltrnet_failed_crc":2,"passport":0,"passport_failed_crc":0}

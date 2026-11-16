@@ -1,0 +1,10 @@
+{"helper":"trunkfmt","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/DSheirer/sdrtrunk","upstream":"DSheirer/sdrtrunk a53f6e9d992dcd94adc73a2591c3b4690a66a6b1"}
+{"t":0.396,"type":"lj1200","crc":"pass","function":"4-ACTIVATE","function_code":4,"address":"1234567","reply_code":"FSA34","vrc":"5A","lrc":"C3","crc_field":"83CA","msg":"550F5AC32E6A2C4853C1"}
+{"t":0.746,"type":"lj1200","crc":"pass","function":"2-TOWER TEST","function_code":2,"address":"0ABCDEF","reply_code":"YUFCM","vrc":"11","lrc":"22","crc_field":"1F03","msg":"550F88444F7B3D50C0F8"}
+{"t":1.096,"type":"lj1200","crc":"pass","function":"3-DEACTIVATE","function_code":3,"address":"7654321","reply_code":"28T5D","vrc":"00","lrc":"FF","crc_field":"D742","msg":"550F00FFC84C2A6E42EB"}
+{"t":1.446,"type":"lj1200","crc":"pass","function":"1Y-SITE ID","function_code":1,"address":"001E345","reply_code":"AHY10","site":"AHY10","vrc":"33","lrc":"44","crc_field":"9D8B","msg":"550FCC228A2C7800D1B9"}
+{"t":1.796,"type":"lj1200","crc":"pass","function":"F-TRACK PULSE","function_code":15,"address":"0F0F0F0","reply_code":"1V7HX","vrc":"66","lrc":"77","crc_field":"EA57","msg":"550F66EEF0F0F0F0EA57"}
+{"t":2.146,"type":"lj1200","crc":"corrected","function":"4-ACTIVATE","function_code":4,"address":"2468ACE","reply_code":"WKM68","vrc":"5A","lrc":"C3","crc_field":"7713","msg":"550F5AC327351624C8EE"}
+{"t":2.496,"type":"lj1200","crc":"corrected","function":"4-ACTIVATE","function_code":4,"address":"2468ACE","reply_code":"WKM68","vrc":"5A","lrc":"C3","crc_field":"7713","msg":"550F5AC327351624C8EE"}
+{"t":3.196,"type":"lj1200_transponder","crc":"unchecked","crc_field":"CDEF","msg":"2AD50123456789ABCDEF"}
+{"t":3.650,"type":"stats","samples":29200,"symbols":4432,"lj1200":7,"lj1200_failed_crc":1,"lj1200_transponder":1,"tait_ani":0,"tait_gps":0,"suppressed_unchecked":0,"fleetsync2":0,"fleetsync2_invalid":0,"mpt1327":0,"mpt1327_invalid":0,"ltr":0,"ltrnet":0,"ltrnet_failed_crc":0,"passport":0,"passport_failed_crc":0}

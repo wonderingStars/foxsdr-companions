@@ -1,0 +1,2 @@
+{"helper":"trunkfmt","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/DSheirer/sdrtrunk","upstream":"DSheirer/sdrtrunk a53f6e9d992dcd94adc73a2591c3b4690a66a6b1"}
+{"t":2.430,"type":"stats","samples":19441,"symbols":2952,"lj1200":0,"lj1200_failed_crc":0,"lj1200_transponder":0,"tait_ani":0,"tait_gps":0,"suppressed_unchecked":0,"fleetsync2":0,"fleetsync2_invalid":0,"mpt1327":0,"mpt1327_invalid":0,"ltr":0,"ltrnet":0,"ltrnet_failed_crc":0,"passport":0,"passport_failed_crc":0}

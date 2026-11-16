@@ -1,0 +1,7 @@
+{"helper":"trunkfmt","version":"0.1.0","protocol":1,"licence":"GPL-3.0-or-later","source":"https://github.com/DSheirer/sdrtrunk","upstream":"DSheirer/sdrtrunk a53f6e9d992dcd94adc73a2591c3b4690a66a6b1"}
+{"t":0.357,"type":"ltr","direction":"osw","message":"CALL","crc":"pass","area":0,"lcn":5,"home":3,"group":12,"free":7,"talkgroup":"03-012","msg":"AC0A30C3E2"}
+{"t":0.704,"type":"ltr","direction":"osw","message":"IDLE","crc":"pass","area":1,"lcn":4,"home":4,"group":255,"free":4,"talkgroup":"04-255","msg":"AC484FF222"}
+{"t":1.050,"type":"ltr","direction":"osw","message":"CALL_END","crc":"pass","area":0,"lcn":31,"home":3,"group":12,"free":7,"talkgroup":"03-012","msg":"AC3E30C3D3"}
+{"t":1.397,"type":"ltr","direction":"osw","message":"UNKNOWN","crc":"pass","area":0,"lcn":25,"home":25,"group":7,"free":30,"talkgroup":"25-007","msg":"AC33907F4F"}
+{"t":2.090,"type":"ltr","direction":"isw","message":"CALL","crc":"pass","area":0,"lcn":9,"home":8,"group":100,"free":2,"talkgroup":"08-100","msg":"AC12864152"}
+{"t":2.560,"type":"stats","samples":122868,"symbols":0,"lj1200":0,"lj1200_failed_crc":0,"lj1200_transponder":0,"tait_ani":0,"tait_gps":0,"suppressed_unchecked":0,"fleetsync2":0,"fleetsync2_invalid":0,"mpt1327":0,"mpt1327_invalid":0,"ltr":5,"ltrnet":0,"ltrnet_failed_crc":0,"passport":0,"passport_failed_crc":0}
